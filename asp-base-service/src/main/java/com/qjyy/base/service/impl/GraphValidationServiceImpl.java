@@ -20,6 +20,8 @@ import com.qjyy.base.domain.entity.ProcessEdge;
 import com.qjyy.base.domain.entity.ProcessNode;
 import com.qjyy.base.domain.entity.StepEdge;
 import com.qjyy.base.domain.entity.StepNode;
+import com.qjyy.base.domain.enums.DependencyStrengthEnum;
+import com.qjyy.base.domain.enums.DependencyTypeEnum;
 import com.qjyy.base.domain.vo.GraphValidationErrorVO;
 import com.qjyy.base.domain.vo.GraphValidationResultVO;
 import com.qjyy.base.service.GraphValidationService;
@@ -60,6 +62,9 @@ public class GraphValidationServiceImpl implements GraphValidationService {
 				bo.setId(edge.getId());
 				bo.setFromNodeId(edge.getFromNodeId());
 				bo.setToNodeId(edge.getToNodeId());
+				bo.setDependencyType(edge.getDependencyType());
+				bo.setDependencyStrength(edge.getDependencyStrength());
+				bo.setLagMinutes(edge.getLagMinutes());
 				edgeBos.add(bo);
 			}
 		}
@@ -84,6 +89,9 @@ public class GraphValidationServiceImpl implements GraphValidationService {
 				bo.setId(edge.getId());
 				bo.setFromNodeId(edge.getFromNodeId());
 				bo.setToNodeId(edge.getToNodeId());
+				bo.setDependencyType(edge.getDependencyType());
+				bo.setDependencyStrength(edge.getDependencyStrength());
+				bo.setLagMinutes(edge.getLagMinutes());
 				edgeBos.add(bo);
 			}
 		}
@@ -118,8 +126,31 @@ public class GraphValidationServiceImpl implements GraphValidationService {
 				Long fromId = extractEdgeFrom(edge);
 				Long toId = extractEdgeTo(edge);
 				Long edgeId = extractEdgeId(edge);
+				String depType = extractDependencyType(edge);
+				String depStrength = extractDependencyStrength(edge);
+				Integer lagMinutes = extractLagMinutes(edge);
 				if (fromId == null || toId == null) {
 					errors.add(buildError("EDGE_NODE_EMPTY", "依赖边节点不能为空", null, edgeId));
+					continue;
+				}
+				if (depType == null) {
+					errors.add(buildError("EDGE_TYPE_EMPTY", "依赖类型不能为空", null, edgeId));
+					continue;
+				}
+				if (!isValidDependencyType(depType)) {
+					errors.add(buildError("EDGE_TYPE_INVALID", "依赖类型非法", null, edgeId));
+					continue;
+				}
+				if (depStrength == null) {
+					errors.add(buildError("EDGE_STRENGTH_EMPTY", "依赖强度不能为空", null, edgeId));
+					continue;
+				}
+				if (!isValidDependencyStrength(depStrength)) {
+					errors.add(buildError("EDGE_STRENGTH_INVALID", "依赖强度非法", null, edgeId));
+					continue;
+				}
+				if (lagMinutes != null && lagMinutes < 0) {
+					errors.add(buildError("EDGE_LAG_INVALID", "滞后时间不能为负数", null, edgeId));
 					continue;
 				}
 				if (!nodeIds.contains(fromId) || !nodeIds.contains(toId)) {
@@ -219,5 +250,53 @@ public class GraphValidationServiceImpl implements GraphValidationService {
 			return ((StepEdgeBo) edge).getToNodeId();
 		}
 		return null;
+	}
+
+	private String extractDependencyType(Object edge) {
+		if (edge instanceof ProcessEdgeBo) {
+			return ((ProcessEdgeBo) edge).getDependencyType();
+		}
+		if (edge instanceof StepEdgeBo) {
+			return ((StepEdgeBo) edge).getDependencyType();
+		}
+		return null;
+	}
+
+	private String extractDependencyStrength(Object edge) {
+		if (edge instanceof ProcessEdgeBo) {
+			return ((ProcessEdgeBo) edge).getDependencyStrength();
+		}
+		if (edge instanceof StepEdgeBo) {
+			return ((StepEdgeBo) edge).getDependencyStrength();
+		}
+		return null;
+	}
+
+	private Integer extractLagMinutes(Object edge) {
+		if (edge instanceof ProcessEdgeBo) {
+			return ((ProcessEdgeBo) edge).getLagMinutes();
+		}
+		if (edge instanceof StepEdgeBo) {
+			return ((StepEdgeBo) edge).getLagMinutes();
+		}
+		return null;
+	}
+
+	private boolean isValidDependencyType(String code) {
+		for (DependencyTypeEnum value : DependencyTypeEnum.values()) {
+			if (value.getCode().equals(code)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private boolean isValidDependencyStrength(String code) {
+		for (DependencyStrengthEnum value : DependencyStrengthEnum.values()) {
+			if (value.getCode().equals(code)) {
+				return true;
+			}
+		}
+		return false;
 	}
 }
