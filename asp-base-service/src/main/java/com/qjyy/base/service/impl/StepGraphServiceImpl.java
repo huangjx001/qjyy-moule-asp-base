@@ -73,32 +73,17 @@ public class StepGraphServiceImpl implements StepGraphService {
 		stepNodeMapper.delete(nodeWrapper);
 		if (!CollectionUtils.isEmpty(bo.getNodes())) {
 			for (StepNodeBo nodeBo : bo.getNodes()) {
-				StepNode node = new StepNode();
-				node.setId(nodeBo.getId());
+				StepNode node = routeConvert.toStepNode(nodeBo);
 				node.setRouteVersionId(resource.getRouteVersionId());
 				node.setResourceRoomId(bo.getResourceRoomId());
-				node.setNodeCode(nodeBo.getNodeCode());
-				node.setNodeName(nodeBo.getNodeName());
-				node.setNodeType(nodeBo.getNodeType());
-				node.setQcFlag(nodeBo.getQcFlag());
-				node.setDurationMinutes(nodeBo.getDurationMinutes());
-				node.setPositionX(nodeBo.getPositionX());
-				node.setPositionY(nodeBo.getPositionY());
-				node.setStatus(nodeBo.getStatus());
 				stepNodeMapper.insert(node);
 			}
 		}
 		if (!CollectionUtils.isEmpty(bo.getEdges())) {
 			for (StepEdgeBo edgeBo : bo.getEdges()) {
-				StepEdge edge = new StepEdge();
-				edge.setId(edgeBo.getId());
+				StepEdge edge = routeConvert.toStepEdge(edgeBo);
 				edge.setRouteVersionId(resource.getRouteVersionId());
 				edge.setResourceRoomId(bo.getResourceRoomId());
-				edge.setFromNodeId(edgeBo.getFromNodeId());
-				edge.setToNodeId(edgeBo.getToNodeId());
-				edge.setDependencyType(edgeBo.getDependencyType());
-				edge.setDependencyStrength(edgeBo.getDependencyStrength());
-				edge.setLagMinutes(edgeBo.getLagMinutes());
 				stepEdgeMapper.insert(edge);
 			}
 		}

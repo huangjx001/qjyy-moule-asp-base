@@ -62,11 +62,11 @@ public class ProcessRouteVersionServiceImpl implements ProcessRouteVersionServic
 		if (route == null) {
 			return null;
 		}
-		ProcessRouteVersion entity = new ProcessRouteVersion();
+		ProcessRouteVersion entity = routeConvert.toProcessRouteVersion(bo);
 		entity.setRouteId(bo.getRouteId());
-		entity.setVersionCode(trimToNull(bo.getVersionCode()));
-		entity.setVersionName(trimToNull(bo.getVersionName()));
-		entity.setRemark(trimToNull(bo.getRemark()));
+		entity.setVersionCode(trimToNull(entity.getVersionCode()));
+		entity.setVersionName(trimToNull(entity.getVersionName()));
+		entity.setRemark(trimToNull(entity.getRemark()));
 		entity.setStatus(RouteVersionStatusEnum.DRAFT.getCode());
 		entity.setEnabled(1);
 		routeVersionMapper.insert(entity);

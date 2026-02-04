@@ -48,7 +48,7 @@ public class ResourceRoomServiceImpl implements ResourceRoomService {
 		if (node == null || !bo.getRouteVersionId().equals(node.getRouteVersionId())) {
 			return null;
 		}
-		ResourceRoom entity = toEntity(bo);
+		ResourceRoom entity = routeConvert.toResourceRoom(bo);
 		resourceRoomMapper.insert(entity);
 		return entity.getId();
 	}
@@ -67,7 +67,7 @@ public class ResourceRoomServiceImpl implements ResourceRoomService {
 		if (node == null || !existing.getRouteVersionId().equals(node.getRouteVersionId())) {
 			return false;
 		}
-		ResourceRoom entity = toEntity(bo);
+		ResourceRoom entity = routeConvert.toResourceRoom(bo);
 		entity.setId(id);
 		entity.setRouteVersionId(existing.getRouteVersionId());
 		return resourceRoomMapper.updateById(entity) > 0;
@@ -103,17 +103,4 @@ public class ResourceRoomServiceImpl implements ResourceRoomService {
 		return routeConvert.toResourceRoomVOList(resourceRoomMapper.selectList(wrapper));
 	}
 
-	private ResourceRoom toEntity(ResourceRoomSaveBo bo) {
-		ResourceRoom entity = new ResourceRoom();
-		entity.setRouteVersionId(bo.getRouteVersionId());
-		entity.setProcessNodeId(bo.getProcessNodeId());
-		entity.setResourceCode(bo.getResourceCode());
-		entity.setResourceName(bo.getResourceName());
-		entity.setPriority(bo.getPriority());
-		entity.setSetupMinutes(bo.getSetupMinutes());
-		entity.setEnabled(bo.getEnabled());
-		entity.setStatus(bo.getStatus());
-		entity.setRemark(bo.getRemark());
-		return entity;
-	}
 }

@@ -6,6 +6,13 @@ import org.mapstruct.Mapper;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.mapstruct.ReportingPolicy;
 
+import com.qjyy.base.domain.bo.ProcessEdgeBo;
+import com.qjyy.base.domain.bo.ProcessNodeBo;
+import com.qjyy.base.domain.bo.ProcessRouteSaveBo;
+import com.qjyy.base.domain.bo.ProcessRouteVersionSaveBo;
+import com.qjyy.base.domain.bo.ResourceRoomSaveBo;
+import com.qjyy.base.domain.bo.StepEdgeBo;
+import com.qjyy.base.domain.bo.StepNodeBo;
 import com.qjyy.base.domain.entity.ProcessEdge;
 import com.qjyy.base.domain.entity.ProcessNode;
 import com.qjyy.base.domain.entity.ProcessRoute;
@@ -42,4 +49,18 @@ public interface RouteConvert {
 	List<StepNodeVO> toStepNodeVOList(List<StepNode> list);
 
 	List<StepEdgeVO> toStepEdgeVOList(List<StepEdge> list);
+
+	ProcessRoute toProcessRoute(ProcessRouteSaveBo bo);
+
+	ProcessRouteVersion toProcessRouteVersion(ProcessRouteVersionSaveBo bo);
+
+	ResourceRoom toResourceRoom(ResourceRoomSaveBo bo);
+
+	ProcessNode toProcessNode(ProcessNodeBo bo);
+
+	ProcessEdge toProcessEdge(ProcessEdgeBo bo);
+
+	StepNode toStepNode(StepNodeBo bo);
+
+	StepEdge toStepEdge(StepEdgeBo bo);
 }

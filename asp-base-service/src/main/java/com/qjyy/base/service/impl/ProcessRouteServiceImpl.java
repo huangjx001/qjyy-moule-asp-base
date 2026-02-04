@@ -24,14 +24,16 @@ public class ProcessRouteServiceImpl implements ProcessRouteService {
 
 	@Override
 	public Long create(ProcessRouteSaveBo bo) {
-		ProcessRoute entity = buildEntity(bo);
+		ProcessRoute entity = routeConvert.toProcessRoute(bo);
+		normalize(entity);
 		processRouteMapper.insert(entity);
 		return entity.getId();
 	}
 
 	@Override
 	public boolean update(Long id, ProcessRouteSaveBo bo) {
-		ProcessRoute entity = buildEntity(bo);
+		ProcessRoute entity = routeConvert.toProcessRoute(bo);
+		normalize(entity);
 		entity.setId(id);
 		return processRouteMapper.updateById(entity) > 0;
 	}
@@ -49,15 +51,13 @@ public class ProcessRouteServiceImpl implements ProcessRouteService {
 		return routeConvert.toRouteVOList(processRouteMapper.selectList(wrapper));
 	}
 
-	private ProcessRoute buildEntity(ProcessRouteSaveBo bo) {
-		ProcessRoute entity = new ProcessRoute();
-		entity.setRouteCode(trimToNull(bo.getRouteCode()));
-		entity.setRouteName(trimToNull(bo.getRouteName()));
-		entity.setProductCode(trimToNull(bo.getProductCode()));
-		entity.setProductName(trimToNull(bo.getProductName()));
-		entity.setDosageForm(trimToNull(bo.getDosageForm()));
-		entity.setRemark(trimToNull(bo.getRemark()));
-		return entity;
+	private void normalize(ProcessRoute entity) {
+		entity.setRouteCode(trimToNull(entity.getRouteCode()));
+		entity.setRouteName(trimToNull(entity.getRouteName()));
+		entity.setProductCode(trimToNull(entity.getProductCode()));
+		entity.setProductName(trimToNull(entity.getProductName()));
+		entity.setDosageForm(trimToNull(entity.getDosageForm()));
+		entity.setRemark(trimToNull(entity.getRemark()));
 	}
 
 	private String trimToNull(String value) {

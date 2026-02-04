@@ -67,30 +67,15 @@ public class ProcessGraphServiceImpl implements ProcessGraphService {
 		processNodeMapper.delete(nodeWrapper);
 		if (!CollectionUtils.isEmpty(bo.getNodes())) {
 			for (ProcessNodeBo nodeBo : bo.getNodes()) {
-				ProcessNode node = new ProcessNode();
-				node.setId(nodeBo.getId());
+				ProcessNode node = routeConvert.toProcessNode(nodeBo);
 				node.setRouteVersionId(bo.getRouteVersionId());
-				node.setNodeCode(nodeBo.getNodeCode());
-				node.setNodeName(nodeBo.getNodeName());
-				node.setNodeType(nodeBo.getNodeType());
-				node.setCriticalFlag(nodeBo.getCriticalFlag());
-				node.setDurationMinutes(nodeBo.getDurationMinutes());
-				node.setPositionX(nodeBo.getPositionX());
-				node.setPositionY(nodeBo.getPositionY());
-				node.setStatus(nodeBo.getStatus());
 				processNodeMapper.insert(node);
 			}
 		}
 		if (!CollectionUtils.isEmpty(bo.getEdges())) {
 			for (ProcessEdgeBo edgeBo : bo.getEdges()) {
-				ProcessEdge edge = new ProcessEdge();
-				edge.setId(edgeBo.getId());
+				ProcessEdge edge = routeConvert.toProcessEdge(edgeBo);
 				edge.setRouteVersionId(bo.getRouteVersionId());
-				edge.setFromNodeId(edgeBo.getFromNodeId());
-				edge.setToNodeId(edgeBo.getToNodeId());
-				edge.setDependencyType(edgeBo.getDependencyType());
-				edge.setDependencyStrength(edgeBo.getDependencyStrength());
-				edge.setLagMinutes(edgeBo.getLagMinutes());
 				processEdgeMapper.insert(edge);
 			}
 		}
