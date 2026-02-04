@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.qjyy.base.mapper.ProcessGraphQueryMapper">
+
+    <select id="selectProcessNodeSummary" resultType="com.qjyy.base.domain.vo.ProcessNodeSummaryVO">
+        SELECT
+            p.id AS nodeId,
+            p.node_name AS nodeName,
+            p.status AS status,
+            COUNT(DISTINCT r.id) AS resourceCount,
+            COUNT(DISTINCT s.id) AS stepCount,
+            COUNT(DISTINCT dm.device_id) AS deviceCount
+        FROM process_node p
+        LEFT JOIN resource_room r ON r.process_node_id = p.id
+        LEFT JOIN step_node s ON s.resource_room_id = r.id
+        LEFT JOIN device_mount dm ON (dm.resource_room_id = r.id OR dm.step_node_id = s.id)
+        WHERE p.route_version_id = #{routeVersionId}
+        GROUP BY p.id, p.node_name, p.status
+    </select>
+
+    <select id="selectResourceDeviceSummary" resultType="com.qjyy.base.domain.vo.ResourceDeviceSummaryVO">
+        SELECT
+            d.id AS deviceId,
+            d.device_code AS deviceCode,
+            d.device_name AS deviceName,
+            dm.mount_type AS mountType,
+            s.id AS sourceStepId,
+            s.node_name AS sourceStepName
+        FROM device_mount dm
+        JOIN device d ON d.id = dm.device_id
+        LEFT JOIN step_node s ON dm.step_node_id = s.id
+        WHERE dm.resource_room_id = #{resourceRoomId}
+        ORDER BY d.device_code
+    </select>
+</mapper>
