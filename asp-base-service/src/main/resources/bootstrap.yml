@@ -1,0 +1,27 @@
+# Tomcat
+server:
+  port: 9212
+
+# Spring
+spring: 
+  application:
+    # 应用名称
+    name: qjyy-asp-base
+  profiles:
+    # 环境配置
+    active: dev
+  cloud:
+    nacos:  
+      discovery:
+        # 服务注册地址（集群地址，多节点以逗号分隔）
+        server-addr: 192.168.100.135:8848,192.168.100.137:8848,192.168.100.138:8848 
+        namespace: 7b0c5e42-9c96-4a2b-b745-e35444e0449d   
+      config:
+        server-addr: 192.168.100.135:8848,192.168.100.137:8848,192.168.100.138:8848
+        namespace: 7b0c5e42-9c96-4a2b-b745-e35444e0449d
+        file-extension: yml
+        # 共享配置，不用改，保持原有业务配置文件引用
+        shared-configs:
+          - application-${spring.profiles.active}.${spring.cloud.nacos.config.file-extension}
+
+

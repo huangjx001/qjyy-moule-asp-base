@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.qjyy.base.mapper.Nc65BomTreeQueryMapper">
+
+    <resultMap id="BomFlatRowMap" type="com.qjyy.base.domain.bo.Nc65BomFlatRow">
+        <!-- hdr -->
+        <result column="hdr_id" property="hdrId"/>
+        <result column="hdr_ml_id" property="hdrMlId"/>
+        <result column="hdr_unit" property="hdrUnit"/>
+        <result column="hdr_nnum" property="hdrNnum"/>
+        <result column="hdr_nastunit" property="hdrNastunit"/>
+        <result column="hdr_nastnum" property="hdrNastnum"/>
+        <result column="hdr_rate" property="hdrRate"/>
+        <result column="hdr_version" property="hdrVersion"/>
+        <result column="hdr_hbdefault" property="hdrHbdefault"/>
+
+        <!-- body -->
+        <result column="body_id" property="bodyId"/>
+        <result column="body_parent_bom_id" property="bodyParentBomId"/>
+        <result column="body_ml_id" property="bodyMlId"/>
+        <result column="body_version" property="bodyVersion"/>
+        <result column="body_unit" property="bodyUnit"/>
+        <result column="body_base_num" property="bodyBaseNum"/>
+        <result column="body_nastunit" property="bodyNastunit"/>
+        <result column="body_use_num" property="bodyUseNum"/>
+        <result column="body_convert_rate" property="bodyConvertRate"/>
+        <result column="body_bcanreplace" property="bodyBcanreplace"/>
+        <result column="body_freplacetype" property="bodyFreplacetype"/>
+
+        <!-- repl -->
+        <result column="repl_id" property="replId"/>
+        <result column="repl_cbom_bid" property="replCbomBid"/>
+        <result column="repl_rowno" property="replRowno"/>
+        <result column="repl_wlcode" property="replWlcode"/>
+        <result column="repl_wlname" property="replWlname"/>
+        <result column="repl_vreplaceindex" property="replVreplaceindex"/>
+    </resultMap>
+
+    <select id="selectBomFlatRows" resultMap="BomFlatRowMap">
+        SELECT
+            -- ===== hdr =====
+            h.id         AS hdr_id,
+            h.ml_id      AS hdr_ml_id,
+            h.unit       AS hdr_unit,
+            h.nnum       AS hdr_nnum,
+            h.nastunit   AS hdr_nastunit,
+            h.nastnum    AS hdr_nastnum,
+            h.rate       AS hdr_rate,
+            h.version    AS hdr_version,
+            h.hbdefault  AS hdr_hbdefault,
+
+            -- ===== body =====
+            b.id            AS body_id,
+            b.parent_bom_id AS body_parent_bom_id,
+            b.ml_id         AS body_ml_id,
+            b.version       AS body_version,
+            b.unit          AS body_unit,
+            b.base_num      AS body_base_num,
+            b.nastunit      AS body_nastunit,
+            b.use_num       AS body_use_num,
+            b.convert_rate  AS body_convert_rate,
+            b.bcanreplace   AS body_bcanreplace,
+            b.freplacetype  AS body_freplacetype,
+
+            -- ===== repl（可开关）=====
+            <choose>
+                <when test="includeRepl != null and includeRepl">
+                    r.id            AS repl_id,
+                    r.cbom_bid      AS repl_cbom_bid,
+                    r.repl_rowno    AS repl_rowno,
+                    r.repl_wlcode   AS repl_wlcode,
+                    r.repl_wlname   AS repl_wlname,
+                    r.vreplaceindex AS repl_vreplaceindex
+                </when>
+                <otherwise>
+                    NULL AS repl_id,
+                    NULL AS repl_cbom_bid,
+                    NULL AS repl_rowno,
+                    NULL AS repl_wlcode,
+                    NULL AS repl_wlname,
+                    NULL AS repl_vreplaceindex
+                </otherwise>
+            </choose>
+
+        FROM nc65_bom_hdr h
+        LEFT JOIN nc65_bom_body b
+               ON b.parent_bom_id = h.id
+
+        <if test="includeRepl != null and includeRepl">
+            LEFT JOIN nc65_bom_repl r
+                   ON r.cbom_bid = b.id
+        </if>
+
+        WHERE h.ml_id = #{mlId}
+
+        <if test="onlyDefault != null and onlyDefault">
+            AND h.hbdefault = 1
+        </if>
+
+        ORDER BY
+            h.hbdefault DESC,
+            h.updated_at DESC,
+            b.id ASC
+            <if test="includeRepl != null and includeRepl">
+                , r.repl_rowno ASC
+            </if>
+    </select>
+
+</mapper>

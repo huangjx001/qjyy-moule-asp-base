@@ -1,0 +1,6 @@
+# 对版本号 pom.xml 用 ours（保留当前分支内容）
+pom.xml    merge=ours
+
+# 对所有 yml 和 Dockerfile 同理
+*.yml      merge=ours
+Dockerfile merge=ours

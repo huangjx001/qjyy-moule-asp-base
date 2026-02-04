@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.qjyy.base.mapper.Nc65BomHdrMapper">
+
+	<select id="countByMlIds" parameterType="map"
+		resultType="com.qjyy.base.domain.bo.Nc65BomHdrCountBo">
+		SELECT
+		ml_id AS mlId,
+		COUNT(1) AS cnt
+		FROM
+		nc65_bom_hdr
+		<where>
+			<if test="mlIds != null and mlIds.size() &gt; 0">
+				ml_id IN
+				<foreach collection="mlIds" item="id" open="(" separator=","
+					close=")">
+					#{id}
+				</foreach>
+			</if>
+			<if test="mlIds == null or mlIds.size() == 0">
+				1 = 0
+			</if>
+		</where>
+		GROUP BY ml_id
+	</select>
+
+</mapper>

@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.qjyy.base.mapper.AnnualDemandMapper">
+
+    <sql id="selectColumns">
+        SELECT
+            A.year                                              AS year,
+            C.workshop_id                                       AS workshopId,
+            C.product_code                                      AS productCode,
+            C.material_name                                     AS materialName,
+            A.currency_name                                     AS currencyName,
+            A.production_type                                   AS productionType,
+
+            CAST(IFNULL(A.sale_plan_qty,0) AS SIGNED)           AS plannedSalesQuantity,
+            CAST(IFNULL(A.gift_plan_qty,0) AS SIGNED)           AS plannedZPQuantity,
+
+            CAST(IFNULL(D.zcn_num, A.bnsjf_qty) AS SIGNED)       AS actualNormalDeliveryQuantity,
+            CAST(IFNULL(D.zpn_num, A.bnsjzq_qty) AS SIGNED)      AS actualZPDeliveryQuantity,
+
+            /* 计划完成率 = (本年实际总发货) / (年度计划总) * 100 */
+            CASE
+                WHEN (IFNULL(A.sale_plan_qty,0) + IFNULL(A.gift_plan_qty,0)) = 0 THEN 0
+                ELSE ROUND(
+                    (IFNULL(D.zcn_num, A.bnsjf_qty) + IFNULL(D.zpn_num, A.bnsjzq_qty))
+                    / (IFNULL(A.sale_plan_qty,0) + IFNULL(A.gift_plan_qty,0)) * 100, 2
+                )
+            END                                                 AS completionRate,
+
+            /* 发货进度预警：A.fhjdyj(String) -> Boolean */
+            CASE
+                WHEN A.fhjdyj IS NULL OR A.fhjdyj = '' OR A.fhjdyj = '0'
+                     OR UPPER(A.fhjdyj) = 'N' OR UPPER(A.fhjdyj) = 'NO'
+                THEN 0 ELSE 1
+            END                                                 AS deliveryProgressWarning,
+
+            CAST(IFNULL(A.sntqfhqty,0) AS SIGNED)                AS lastYearSamePeriodDeliveryQuantity,
+
+            /* 发货增长率 = (本年实际总发货 - 去年同期) / 去年同期 * 100 */
+            CASE
+                WHEN IFNULL(A.sntqfhqty,0) = 0 THEN 0
+                ELSE ROUND(
+                    (
+                      (IFNULL(D.zcn_num, A.bnsjf_qty) + IFNULL(D.zpn_num, A.bnsjzq_qty))
+                      - IFNULL(A.sntqfhqty,0)
+                    ) / IFNULL(A.sntqfhqty,0) * 100, 2
+                )
+            END                                                 AS deliveryGrowthRate,
+
+            CAST((IFNULL(A.sale_plan_qty,0) + IFNULL(A.gift_plan_qty,0)) AS SIGNED) AS initialAnnualPlanTotalQuantity,
+            CAST((IFNULL(D.zcn_num, A.bnsjf_qty) + IFNULL(D.zpn_num, A.bnsjzq_qty)) AS SIGNED) AS actualTotalDeliveryQuantity,
+
+            /* 暂无修正来源：先按 0/期初计划兜底，后续你接入修正口径再替换 */
+            0                                                   AS annualPlanAdjustmentDifference,
+            CAST((IFNULL(A.sale_plan_qty,0) + IFNULL(A.gift_plan_qty,0)) AS SIGNED) AS adjustedAnnualPlanTotalQuantity,
+
+            CAST(
+                (IFNULL(A.sale_plan_qty,0) + IFNULL(A.gift_plan_qty,0))
+                - (IFNULL(D.zcn_num, A.bnsjf_qty) + IFNULL(D.zpn_num, A.bnsjzq_qty))
+            AS SIGNED)                                          AS adjustedRemainingUnshippedQuantity,
+
+            CASE
+                WHEN (IFNULL(A.sale_plan_qty,0) + IFNULL(A.gift_plan_qty,0)) = 0 THEN 0
+                ELSE ROUND(
+                    (IFNULL(D.zcn_num, A.bnsjf_qty) + IFNULL(D.zpn_num, A.bnsjzq_qty))
+                    / (IFNULL(A.sale_plan_qty,0) + IFNULL(A.gift_plan_qty,0)) * 100, 2
+                )
+            END                                                 AS adjustedAnnualPlanCompletionRate
+    </sql>
+
+    <sql id="fromJoin">
+        FROM yk_nmrms_yjjxs_fhjdp_v A
+        LEFT JOIN yk_zx_goods_nctoinca B
+               ON A.goods_id = B.def2
+        LEFT JOIN nc65_material C
+               ON B.code = C.product_code
+        LEFT JOIN nc65_m4c_stat_year D
+               ON D.wl_code = C.product_code
+              AND D.year = A.year
+    </sql>
+
+    <sql id="wherePart">
+        <where>
+            <if test="bo.year != null">
+                AND A.year = #{bo.year}
+            </if>
+
+            <if test="bo.workshopId != null and bo.workshopId != ''">
+                AND C.workshop_id = #{bo.workshopId}
+            </if>
+
+            <if test="bo.productCode != null and bo.productCode != ''">
+                AND (C.product_code LIKE CONCAT('%', #{bo.productCode}, '%')
+                     OR B.code LIKE CONCAT('%', #{bo.productCode}, '%'))
+            </if>
+
+            <if test="bo.materialName != null and bo.materialName != ''">
+                AND C.material_name LIKE CONCAT('%', #{bo.materialName}, '%')
+            </if>
+
+            <if test="bo.currencyName != null and bo.currencyName != ''">
+                AND A.currency_name LIKE CONCAT('%', #{bo.currencyName}, '%')
+            </if>
+
+            <if test="bo.productionType != null and bo.productionType != ''">
+                AND A.production_type = #{bo.productionType}
+            </if>
+        </where>
+    </sql>
+
+    <select id="selectPage" resultType="com.qjyy.base.domain.vo.AnnualDemandVO">
+        <include refid="selectColumns"/>
+        <include refid="fromJoin"/>
+        <include refid="wherePart"/>
+        ORDER BY C.workshop_id, C.product_code
+    </select>
+
+    <select id="selectList" resultType="com.qjyy.base.domain.vo.AnnualDemandVO">
+        <include refid="selectColumns"/>
+        <include refid="fromJoin"/>
+        <include refid="wherePart"/>
+        ORDER BY C.workshop_id, C.product_code
+    </select>
+
+</mapper>
