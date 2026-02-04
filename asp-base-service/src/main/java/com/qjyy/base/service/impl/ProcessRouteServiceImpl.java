@@ -14,7 +14,9 @@ import com.qjyy.base.mapper.ProcessRouteMapper;
 import com.qjyy.base.service.ProcessRouteService;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ProcessRouteServiceImpl implements ProcessRouteService {
@@ -24,28 +26,35 @@ public class ProcessRouteServiceImpl implements ProcessRouteService {
 
 	@Override
 	public Long create(ProcessRouteSaveBo bo) {
+		// 创建工艺路线
 		ProcessRoute entity = routeConvert.toProcessRoute(bo);
 		normalize(entity);
 		processRouteMapper.insert(entity);
+		log.info("创建工艺路线成功, routeId={}, routeCode={}", entity.getId(), entity.getRouteCode());
 		return entity.getId();
 	}
 
 	@Override
 	public boolean update(Long id, ProcessRouteSaveBo bo) {
+		// 更新工艺路线
 		ProcessRoute entity = routeConvert.toProcessRoute(bo);
 		normalize(entity);
 		entity.setId(id);
-		return processRouteMapper.updateById(entity) > 0;
+		boolean updated = processRouteMapper.updateById(entity) > 0;
+		log.info("更新工艺路线, routeId={}, updated={}", id, updated);
+		return updated;
 	}
 
 	@Override
 	public ProcessRouteVO get(Long id) {
+		// 查询工艺路线详情
 		ProcessRoute entity = processRouteMapper.selectById(id);
 		return entity == null ? null : routeConvert.toRouteVO(entity);
 	}
 
 	@Override
 	public List<ProcessRouteVO> listAll() {
+		// 查询工艺路线列表
 		LambdaQueryWrapper<ProcessRoute> wrapper = new LambdaQueryWrapper<>();
 		wrapper.orderByDesc(ProcessRoute::getId);
 		return routeConvert.toRouteVOList(processRouteMapper.selectList(wrapper));

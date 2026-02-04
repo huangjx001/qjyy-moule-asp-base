@@ -26,7 +26,9 @@ import com.qjyy.base.service.GraphValidationService;
 import com.qjyy.base.service.ProcessGraphService;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ProcessGraphServiceImpl implements ProcessGraphService {
@@ -40,6 +42,7 @@ public class ProcessGraphServiceImpl implements ProcessGraphService {
 
 	@Override
 	public ProcessGraphVO getGraph(Long routeVersionId) {
+		// 获取工序画布数据
 		List<ProcessNode> nodes = listNodes(routeVersionId);
 		List<ProcessEdge> edges = listEdges(routeVersionId);
 		ProcessGraphVO vo = new ProcessGraphVO();
@@ -52,11 +55,14 @@ public class ProcessGraphServiceImpl implements ProcessGraphService {
 	@Override
 	@Transactional(rollbackFor = Exception.class)
 	public boolean saveGraph(ProcessGraphSaveBo bo) {
+		// 保存工序画布
 		if (bo == null || bo.getRouteVersionId() == null) {
+			log.warn("保存工序图失败, 参数为空");
 			return false;
 		}
 		ProcessRouteVersion version = routeVersionMapper.selectById(bo.getRouteVersionId());
 		if (version == null || RouteVersionStatusEnum.RELEASED.getCode().equals(version.getStatus())) {
+			log.warn("保存工序图失败, 版本不可编辑, routeVersionId={}", bo.getRouteVersionId());
 			return false;
 		}
 		LambdaQueryWrapper<ProcessEdge> edgeWrapper = new LambdaQueryWrapper<>();
@@ -79,16 +85,20 @@ public class ProcessGraphServiceImpl implements ProcessGraphService {
 				processEdgeMapper.insert(edge);
 			}
 		}
+		log.info("保存工序图成功, routeVersionId={}, nodeSize={}, edgeSize={}", bo.getRouteVersionId(),
+				bo.getNodes() == null ? 0 : bo.getNodes().size(), bo.getEdges() == null ? 0 : bo.getEdges().size());
 		return true;
 	}
 
 	@Override
 	public GraphValidationResultVO validateGraph(ProcessGraphSaveBo bo) {
+		// 校验工序画布
 		return graphValidationService.validateProcessGraph(bo.getNodes(), bo.getEdges());
 	}
 
 	@Override
 	public List<ProcessNodeSummaryVO> listNodeSummary(Long routeVersionId) {
+		// 查询工序摘要
 		return graphQueryMapper.selectProcessNodeSummary(routeVersionId);
 	}
 

@@ -40,7 +40,9 @@ import com.qjyy.base.service.GraphValidationService;
 import com.qjyy.base.service.ProcessRouteVersionService;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ProcessRouteVersionServiceImpl implements ProcessRouteVersionService {
@@ -58,8 +60,10 @@ public class ProcessRouteVersionServiceImpl implements ProcessRouteVersionServic
 
 	@Override
 	public Long create(ProcessRouteVersionSaveBo bo) {
+		// 创建版本
 		ProcessRoute route = processRouteMapper.selectById(bo.getRouteId());
 		if (route == null) {
+			log.warn("创建版本失败, routeId不存在, routeId={}", bo.getRouteId());
 			return null;
 		}
 		ProcessRouteVersion entity = routeConvert.toProcessRouteVersion(bo);
@@ -70,13 +74,17 @@ public class ProcessRouteVersionServiceImpl implements ProcessRouteVersionServic
 		entity.setStatus(RouteVersionStatusEnum.DRAFT.getCode());
 		entity.setEnabled(1);
 		routeVersionMapper.insert(entity);
+		log.info("创建版本成功, versionId={}, routeId={}, versionCode={}", entity.getId(), entity.getRouteId(),
+				entity.getVersionCode());
 		return entity.getId();
 	}
 
 	@Override
 	public boolean update(Long id, ProcessRouteVersionUpdateBo bo) {
+		// 更新版本信息
 		ProcessRouteVersion entity = routeVersionMapper.selectById(id);
 		if (entity == null || RouteVersionStatusEnum.RELEASED.getCode().equals(entity.getStatus())) {
+			log.warn("更新版本失败, versionId={}, status={}", id, entity == null ? null : entity.getStatus());
 			return false;
 		}
 		ProcessRouteVersion update = new ProcessRouteVersion();
@@ -84,17 +92,21 @@ public class ProcessRouteVersionServiceImpl implements ProcessRouteVersionServic
 		update.setVersionName(trimToNull(bo.getVersionName()));
 		update.setEnabled(bo.getEnabled());
 		update.setRemark(trimToNull(bo.getRemark()));
-		return routeVersionMapper.updateById(update) > 0;
+		boolean updated = routeVersionMapper.updateById(update) > 0;
+		log.info("更新版本, versionId={}, updated={}", id, updated);
+		return updated;
 	}
 
 	@Override
 	public ProcessRouteVersionVO get(Long id) {
+		// 查询版本详情
 		ProcessRouteVersion entity = routeVersionMapper.selectById(id);
 		return entity == null ? null : routeConvert.toRouteVersionVO(entity);
 	}
 
 	@Override
 	public List<ProcessRouteVersionVO> listByRouteId(Long routeId) {
+		// 查询路线下的版本列表
 		LambdaQueryWrapper<ProcessRouteVersion> wrapper = new LambdaQueryWrapper<>();
 		wrapper.eq(ProcessRouteVersion::getRouteId, routeId).orderByDesc(ProcessRouteVersion::getId);
 		return routeConvert.toRouteVersionVOList(routeVersionMapper.selectList(wrapper));
@@ -103,8 +115,10 @@ public class ProcessRouteVersionServiceImpl implements ProcessRouteVersionServic
 	@Override
 	@Transactional(rollbackFor = Exception.class)
 	public Long copy(Long sourceVersionId, ProcessRouteVersionCopyBo bo) {
+		// 复制版本
 		ProcessRouteVersion source = routeVersionMapper.selectById(sourceVersionId);
 		if (source == null) {
+			log.warn("复制版本失败, 源版本不存在, sourceVersionId={}", sourceVersionId);
 			return null;
 		}
 		ProcessRouteVersion target = new ProcessRouteVersion();
@@ -115,6 +129,7 @@ public class ProcessRouteVersionServiceImpl implements ProcessRouteVersionServic
 		target.setStatus(RouteVersionStatusEnum.DRAFT.getCode());
 		target.setEnabled(1);
 		routeVersionMapper.insert(target);
+		log.info("开始复制版本, sourceVersionId={}, targetVersionId={}", sourceVersionId, target.getId());
 
 		Map<Long, Long> processNodeMap = new HashMap<>();
 		List<ProcessNode> processNodes = listProcessNodes(sourceVersionId);
@@ -203,17 +218,21 @@ public class ProcessRouteVersionServiceImpl implements ProcessRouteVersionServic
 			copy.setRemark(mount.getRemark());
 			deviceMountMapper.insert(copy);
 		}
+		log.info("复制版本完成, sourceVersionId={}, targetVersionId={}", sourceVersionId, target.getId());
 		return target.getId();
 	}
 
 	@Override
 	@Transactional(rollbackFor = Exception.class)
 	public GraphValidationResultVO release(Long versionId) {
+		// 发布版本，强制校验
 		ProcessRouteVersion version = routeVersionMapper.selectById(versionId);
 		if (version == null) {
+			log.warn("发布失败, 版本不存在, versionId={}", versionId);
 			return buildFail("VERSION_NOT_FOUND", "版本不存在");
 		}
 		if (RouteVersionStatusEnum.RELEASED.getCode().equals(version.getStatus())) {
+			log.warn("发布失败, 版本已发布, versionId={}", versionId);
 			return buildFail("VERSION_RELEASED", "版本已发布");
 		}
 		List<ProcessNode> processNodes = listProcessNodes(versionId);
@@ -258,6 +277,9 @@ public class ProcessRouteVersionServiceImpl implements ProcessRouteVersionServic
 			update.setStatus(RouteVersionStatusEnum.RELEASED.getCode());
 			update.setReleasedAt(LocalDateTime.now());
 			routeVersionMapper.updateById(update);
+			log.info("发布成功, versionId={}", versionId);
+		} else {
+			log.warn("发布失败, versionId={}, errorCount={}", versionId, errors.size());
 		}
 		return result;
 	}

@@ -26,7 +26,9 @@ import com.qjyy.base.service.GraphValidationService;
 import com.qjyy.base.service.StepGraphService;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class StepGraphServiceImpl implements StepGraphService {
@@ -40,6 +42,7 @@ public class StepGraphServiceImpl implements StepGraphService {
 
 	@Override
 	public StepGraphVO getGraph(Long resourceRoomId) {
+		// 获取工步画布数据
 		StepGraphVO vo = new StepGraphVO();
 		vo.setResourceRoomId(resourceRoomId);
 		LambdaQueryWrapper<StepNode> nodeWrapper = new LambdaQueryWrapper<>();
@@ -54,15 +57,19 @@ public class StepGraphServiceImpl implements StepGraphService {
 	@Override
 	@Transactional(rollbackFor = Exception.class)
 	public boolean saveGraph(StepGraphSaveBo bo) {
+		// 保存工步画布
 		if (bo == null || bo.getResourceRoomId() == null) {
+			log.warn("保存工步图失败, 参数为空");
 			return false;
 		}
 		ResourceRoom resource = resourceRoomMapper.selectById(bo.getResourceRoomId());
 		if (resource == null) {
+			log.warn("保存工步图失败, 资源不存在, resourceRoomId={}", bo.getResourceRoomId());
 			return false;
 		}
 		ProcessRouteVersion version = routeVersionMapper.selectById(resource.getRouteVersionId());
 		if (version == null || RouteVersionStatusEnum.RELEASED.getCode().equals(version.getStatus())) {
+			log.warn("保存工步图失败, 版本不可编辑, resourceRoomId={}", bo.getResourceRoomId());
 			return false;
 		}
 		LambdaQueryWrapper<StepEdge> edgeWrapper = new LambdaQueryWrapper<>();
@@ -87,11 +94,14 @@ public class StepGraphServiceImpl implements StepGraphService {
 				stepEdgeMapper.insert(edge);
 			}
 		}
+		log.info("保存工步图成功, resourceRoomId={}, nodeSize={}, edgeSize={}", bo.getResourceRoomId(),
+				bo.getNodes() == null ? 0 : bo.getNodes().size(), bo.getEdges() == null ? 0 : bo.getEdges().size());
 		return true;
 	}
 
 	@Override
 	public GraphValidationResultVO validateGraph(StepGraphSaveBo bo) {
+		// 校验工步画布
 		return graphValidationService.validateStepGraph(bo.getNodes(), bo.getEdges());
 	}
 }

@@ -24,21 +24,27 @@ import com.qjyy.base.domain.vo.GraphValidationErrorVO;
 import com.qjyy.base.domain.vo.GraphValidationResultVO;
 import com.qjyy.base.service.GraphValidationService;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @Service
 public class GraphValidationServiceImpl implements GraphValidationService {
 
 	@Override
 	public GraphValidationResultVO validateProcessGraph(List<ProcessNodeBo> nodes, List<ProcessEdgeBo> edges) {
+		// 校验工序图
 		return validate(nodes, edges);
 	}
 
 	@Override
 	public GraphValidationResultVO validateStepGraph(List<StepNodeBo> nodes, List<StepEdgeBo> edges) {
+		// 校验工步图
 		return validate(nodes, edges);
 	}
 
 	@Override
 	public GraphValidationResultVO validateProcessEntities(List<ProcessNode> nodes, List<ProcessEdge> edges) {
+		// 校验工序实体
 		List<ProcessNodeBo> nodeBos = new ArrayList<>();
 		if (!CollectionUtils.isEmpty(nodes)) {
 			for (ProcessNode node : nodes) {
@@ -62,6 +68,7 @@ public class GraphValidationServiceImpl implements GraphValidationService {
 
 	@Override
 	public GraphValidationResultVO validateStepEntities(List<StepNode> nodes, List<StepEdge> edges) {
+		// 校验工步实体
 		List<StepNodeBo> nodeBos = new ArrayList<>();
 		if (!CollectionUtils.isEmpty(nodes)) {
 			for (StepNode node : nodes) {
@@ -84,6 +91,7 @@ public class GraphValidationServiceImpl implements GraphValidationService {
 	}
 
 	private <N, E> GraphValidationResultVO validate(List<N> nodes, List<E> edges) {
+		// DAG 基础校验（唯一性/引用合法/无环）
 		List<GraphValidationErrorVO> errors = new ArrayList<>();
 		if (CollectionUtils.isEmpty(nodes)) {
 			errors.add(buildError("NODE_EMPTY", "节点不能为空", null, null));
@@ -150,7 +158,11 @@ public class GraphValidationServiceImpl implements GraphValidationService {
 		if (processed != nodeIds.size()) {
 			errors.add(buildError("EDGE_CYCLE", "存在环路", null, null));
 		}
-		return buildResult(errors);
+		GraphValidationResultVO result = buildResult(errors);
+		if (!result.isValid()) {
+			log.warn("图校验失败, errorCount={}", errors.size());
+		}
+		return result;
 	}
 
 	private GraphValidationResultVO buildResult(List<GraphValidationErrorVO> errors) {
