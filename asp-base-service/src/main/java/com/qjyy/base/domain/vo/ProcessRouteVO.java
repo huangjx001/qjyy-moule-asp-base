@@ -20,12 +20,6 @@ public class ProcessRouteVO {
 	@ApiModelProperty(value = "产品编码")
 	private String productCode;
 
-	@ApiModelProperty(value = "产品名称")
-	private String productName;
-
-	@ApiModelProperty(value = "剂型")
-	private String dosageForm;
-
 	@ApiModelProperty(value = "备注")
 	private String remark;
 }

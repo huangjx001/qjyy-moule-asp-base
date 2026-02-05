@@ -64,8 +64,6 @@ public class ProcessRouteServiceImpl implements ProcessRouteService {
 		entity.setRouteCode(trimToNull(entity.getRouteCode()));
 		entity.setRouteName(trimToNull(entity.getRouteName()));
 		entity.setProductCode(trimToNull(entity.getProductCode()));
-		entity.setProductName(trimToNull(entity.getProductName()));
-		entity.setDosageForm(trimToNull(entity.getDosageForm()));
 		entity.setRemark(trimToNull(entity.getRemark()));
 	}
 
