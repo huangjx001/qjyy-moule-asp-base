@@ -8,10 +8,8 @@ import org.springframework.util.StringUtils;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.qjyy.base.convert.RouteConvert;
 import com.qjyy.base.domain.bo.ProcessRouteSaveBo;
-import com.qjyy.base.domain.entity.ProductBase;
 import com.qjyy.base.domain.entity.ProcessRoute;
 import com.qjyy.base.domain.vo.ProcessRouteVO;
-import com.qjyy.base.mapper.ProductBaseMapper;
 import com.qjyy.base.mapper.ProcessRouteMapper;
 import com.qjyy.base.service.ProcessRouteService;
 
@@ -24,17 +22,12 @@ import lombok.extern.slf4j.Slf4j;
 public class ProcessRouteServiceImpl implements ProcessRouteService {
 
 	private final ProcessRouteMapper processRouteMapper;
-	private final ProductBaseMapper productBaseMapper;
 	private final RouteConvert routeConvert;
 
 	@Override
 	public Long create(ProcessRouteSaveBo bo) {
 		// 创建工艺路线
 		ProcessRoute entity = routeConvert.toProcessRoute(bo);
-		if (!applyProductBase(entity)) {
-			log.warn("创建工艺路线失败, 产品基础数据不存在, productId={}", entity.getProductId());
-			return null;
-		}
 		normalize(entity);
 		processRouteMapper.insert(entity);
 		log.info("创建工艺路线成功, routeId={}, routeCode={}", entity.getId(), entity.getRouteCode());
@@ -45,10 +38,6 @@ public class ProcessRouteServiceImpl implements ProcessRouteService {
 	public boolean update(Long id, ProcessRouteSaveBo bo) {
 		// 更新工艺路线
 		ProcessRoute entity = routeConvert.toProcessRoute(bo);
-		if (!applyProductBase(entity)) {
-			log.warn("更新工艺路线失败, 产品基础数据不存在, productId={}", entity.getProductId());
-			return false;
-		}
 		normalize(entity);
 		entity.setId(id);
 		boolean updated = processRouteMapper.updateById(entity) > 0;
@@ -78,20 +67,6 @@ public class ProcessRouteServiceImpl implements ProcessRouteService {
 		entity.setProductName(trimToNull(entity.getProductName()));
 		entity.setDosageForm(trimToNull(entity.getDosageForm()));
 		entity.setRemark(trimToNull(entity.getRemark()));
-	}
-
-	private boolean applyProductBase(ProcessRoute entity) {
-		if (entity == null || entity.getProductId() == null) {
-			return true;
-		}
-		ProductBase base = productBaseMapper.selectById(entity.getProductId());
-		if (base == null) {
-			return false;
-		}
-		entity.setProductCode(base.getProductCode());
-		entity.setProductName(base.getProductName());
-		entity.setDosageForm(base.getDosageForm());
-		return true;
 	}
 
 	private String trimToNull(String value) {

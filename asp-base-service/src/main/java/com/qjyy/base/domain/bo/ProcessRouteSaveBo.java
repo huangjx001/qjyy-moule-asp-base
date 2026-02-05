@@ -8,9 +8,6 @@ import lombok.Data;
 @ApiModel(description = "工艺路线保存请求")
 public class ProcessRouteSaveBo {
 
-	@ApiModelProperty(value = "产品ID")
-	private Long productId;
-
 	@ApiModelProperty(value = "路线编码")
 	private String routeCode;
 

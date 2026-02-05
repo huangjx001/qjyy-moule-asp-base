@@ -18,9 +18,6 @@ public class ProcessRoute {
 	@ApiModelProperty(value = "主键ID")
 	private Long id;
 
-	@ApiModelProperty(value = "产品ID")
-	private Long productId;
-
 	@ApiModelProperty(value = "路线编码")
 	private String routeCode;
 
