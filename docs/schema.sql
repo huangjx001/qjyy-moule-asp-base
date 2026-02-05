@@ -5,7 +5,6 @@ CREATE TABLE IF NOT EXISTS process_route (
     id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '主键ID',
     route_code VARCHAR(64) NOT NULL COMMENT '路线编码',
     route_name VARCHAR(128) NOT NULL COMMENT '路线名称',
-    product_code VARCHAR(64) DEFAULT NULL COMMENT '产品编码',
     remark VARCHAR(255) DEFAULT NULL COMMENT '备注',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
@@ -27,6 +26,19 @@ CREATE TABLE IF NOT EXISTS process_route_version (
     KEY idx_route_version_route (route_id),
     UNIQUE KEY uk_route_version_code (route_id, version_code)
 ) COMMENT='工艺路线版本';
+
+CREATE TABLE IF NOT EXISTS process_route_product (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '主键ID',
+    route_id BIGINT NOT NULL COMMENT '路线ID',
+    product_code VARCHAR(64) DEFAULT NULL COMMENT '产品编码(为空表示默认路线)',
+    is_default TINYINT NOT NULL DEFAULT 0 COMMENT '是否默认路线',
+    enabled TINYINT NOT NULL DEFAULT 1 COMMENT '是否启用',
+    remark VARCHAR(255) DEFAULT NULL COMMENT '备注',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    KEY idx_route_product_route (route_id),
+    KEY idx_route_product_code (product_code)
+) COMMENT='路线-产品关联';
 
 CREATE TABLE IF NOT EXISTS process_base (
     id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '主键ID',

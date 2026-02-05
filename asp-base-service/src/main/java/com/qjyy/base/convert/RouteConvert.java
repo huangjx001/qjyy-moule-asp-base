@@ -8,6 +8,7 @@ import org.mapstruct.ReportingPolicy;
 
 import com.qjyy.base.domain.bo.ProcessEdgeBo;
 import com.qjyy.base.domain.bo.ProcessNodeBo;
+import com.qjyy.base.domain.bo.ProcessRouteProductSaveBo;
 import com.qjyy.base.domain.bo.ProcessRouteSaveBo;
 import com.qjyy.base.domain.bo.ProcessRouteVersionSaveBo;
 import com.qjyy.base.domain.bo.ResourceRoomSaveBo;
@@ -17,6 +18,7 @@ import com.qjyy.base.domain.entity.DeviceMount;
 import com.qjyy.base.domain.entity.ProcessEdge;
 import com.qjyy.base.domain.entity.ProcessNode;
 import com.qjyy.base.domain.entity.ProcessRoute;
+import com.qjyy.base.domain.entity.ProcessRouteProduct;
 import com.qjyy.base.domain.entity.ProcessRouteVersion;
 import com.qjyy.base.domain.entity.ResourceRoom;
 import com.qjyy.base.domain.entity.StepEdge;
@@ -24,6 +26,7 @@ import com.qjyy.base.domain.entity.StepNode;
 import com.qjyy.base.domain.vo.ProcessEdgeVO;
 import com.qjyy.base.domain.vo.ProcessNodeVO;
 import com.qjyy.base.domain.vo.ProcessRouteVO;
+import com.qjyy.base.domain.vo.ProcessRouteProductVO;
 import com.qjyy.base.domain.vo.ProcessRouteVersionVO;
 import com.qjyy.base.domain.vo.ResourceRoomVO;
 import com.qjyy.base.domain.vo.StepEdgeVO;
@@ -36,6 +39,10 @@ public interface RouteConvert {
 	ProcessRouteVO toRouteVO(ProcessRoute entity);
 
 	List<ProcessRouteVO> toRouteVOList(List<ProcessRoute> list);
+
+	ProcessRouteProductVO toRouteProductVO(ProcessRouteProduct entity);
+
+	List<ProcessRouteProductVO> toRouteProductVOList(List<ProcessRouteProduct> list);
 
 	ProcessRouteVersionVO toRouteVersionVO(ProcessRouteVersion entity);
 
@@ -52,6 +59,8 @@ public interface RouteConvert {
 	List<StepEdgeVO> toStepEdgeVOList(List<StepEdge> list);
 
 	ProcessRoute toProcessRoute(ProcessRouteSaveBo bo);
+
+	ProcessRouteProduct toRouteProduct(ProcessRouteProductSaveBo bo);
 
 	ProcessRouteVersion toProcessRouteVersion(ProcessRouteVersionSaveBo bo);
 

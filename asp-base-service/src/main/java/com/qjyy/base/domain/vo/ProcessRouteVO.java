@@ -17,9 +17,6 @@ public class ProcessRouteVO {
 	@ApiModelProperty(value = "路线名称")
 	private String routeName;
 
-	@ApiModelProperty(value = "产品编码")
-	private String productCode;
-
 	@ApiModelProperty(value = "备注")
 	private String remark;
 }

@@ -63,7 +63,6 @@ public class ProcessRouteServiceImpl implements ProcessRouteService {
 	private void normalize(ProcessRoute entity) {
 		entity.setRouteCode(trimToNull(entity.getRouteCode()));
 		entity.setRouteName(trimToNull(entity.getRouteName()));
-		entity.setProductCode(trimToNull(entity.getProductCode()));
 		entity.setRemark(trimToNull(entity.getRemark()));
 	}
 

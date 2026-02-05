@@ -15,7 +15,7 @@
 
 ## 2. 接口说明与要点
 
-> 工序/工步/资源基础数据由主数据模块统一维护，建模时通过 `*_base_id` 进行引用，并仅保留名称快照字段用于版本冻结，降低冗余。产品信息通过物料编码关联 NC65 物料主数据，仅存 `productCode`。
+> 工序/工步/资源基础数据由主数据模块统一维护，建模时通过 `*_base_id` 进行引用，并仅保留名称快照字段用于版本冻结，降低冗余。产品信息通过物料编码关联 NC65 物料主数据，产品-路线关系由关联表维护（未配置则走默认路线）。
 
 ### 2.0 工序/工步/资源基础数据
 
@@ -50,7 +50,15 @@
 - `GET /route-versions/list?routeId=...`：版本列表。
 - `POST /route-versions/{id}/copy`：复制版本（深拷贝工序/资源/工步/挂载）。
 - `POST /route-versions/{id}/release`：发布版本（强制校验）。
-- 说明：创建路线时使用 `productCode`（物料编码）关联 NC65 物料主数据。
+- 说明：产品与路线的绑定由关联表维护，未绑定走默认路线。
+
+### 2.1.1 路线-产品关联
+
+- `POST /route-products`：创建关联（可设置 `isDefault` 作为默认路线）。
+- `PUT /route-products/{id}`：更新关联。
+- `DELETE /route-products/{id}`：删除关联。
+- `GET /route-products/list?productCode=...`：关联列表。
+- `GET /route-products/resolve?productCode=...`：按产品解析路线（无配置走默认）。
 
 ### 2.2 工序画布（一级画布）
 
