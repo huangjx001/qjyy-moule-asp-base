@@ -24,19 +24,19 @@
 - `DELETE /process-bases/{id}`：删除工序基础数据。
 - `GET /process-bases/{id}`：工序基础数据详情。
 - `GET /process-bases/list`：工序基础数据列表。
-- `GET /process-bases/options?keyword=...`：工序基础数据下拉。
+- `GET /process-bases/options?keyword=...`：工序基础数据下拉（仅启用）。
 - `POST /resource-bases`：创建资源基础数据。
 - `PUT /resource-bases/{id}`：更新资源基础数据。
 - `DELETE /resource-bases/{id}`：删除资源基础数据。
 - `GET /resource-bases/{id}`：资源基础数据详情。
 - `GET /resource-bases/list`：资源基础数据列表。
-- `GET /resource-bases/options?keyword=...`：资源基础数据下拉。
+- `GET /resource-bases/options?keyword=...`：资源基础数据下拉（仅启用）。
 - `POST /step-bases`：创建工步基础数据。
 - `PUT /step-bases/{id}`：更新工步基础数据。
 - `DELETE /step-bases/{id}`：删除工步基础数据。
 - `GET /step-bases/{id}`：工步基础数据详情。
 - `GET /step-bases/list`：工步基础数据列表。
-- `GET /step-bases/options?keyword=...`：工步基础数据下拉。
+- `GET /step-bases/options?keyword=...`：工步基础数据下拉（仅启用）。
 
 ### 2.1 路线与版本
 

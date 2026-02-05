@@ -67,6 +67,7 @@ public class StepBaseServiceImpl implements StepBaseService {
 	@Override
 	public List<StepBaseOptionVO> listOptions(String keyword) {
 		LambdaQueryWrapper<StepBase> wrapper = buildKeywordWrapper(keyword);
+		wrapper.eq(StepBase::getEnabled, 1);
 		wrapper.orderByDesc(StepBase::getId);
 		return baseDataConvert.toStepBaseOptionList(stepBaseMapper.selectList(wrapper));
 	}

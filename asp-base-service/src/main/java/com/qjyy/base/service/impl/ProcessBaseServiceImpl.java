@@ -67,6 +67,7 @@ public class ProcessBaseServiceImpl implements ProcessBaseService {
 	@Override
 	public List<ProcessBaseOptionVO> listOptions(String keyword) {
 		LambdaQueryWrapper<ProcessBase> wrapper = buildKeywordWrapper(keyword);
+		wrapper.eq(ProcessBase::getEnabled, 1);
 		wrapper.orderByDesc(ProcessBase::getId);
 		return baseDataConvert.toProcessBaseOptionList(processBaseMapper.selectList(wrapper));
 	}

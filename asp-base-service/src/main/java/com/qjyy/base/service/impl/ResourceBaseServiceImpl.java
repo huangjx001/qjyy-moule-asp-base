@@ -67,6 +67,7 @@ public class ResourceBaseServiceImpl implements ResourceBaseService {
 	@Override
 	public List<ResourceBaseOptionVO> listOptions(String keyword) {
 		LambdaQueryWrapper<ResourceBase> wrapper = buildKeywordWrapper(keyword);
+		wrapper.eq(ResourceBase::getEnabled, 1);
 		wrapper.orderByDesc(ResourceBase::getId);
 		return baseDataConvert.toResourceBaseOptionList(resourceBaseMapper.selectList(wrapper));
 	}
