@@ -115,7 +115,7 @@ public class ProcessRouteVersionServiceImpl implements ProcessRouteVersionServic
 	@Override
 	@Transactional(rollbackFor = Exception.class)
 	public Long copy(Long sourceVersionId, ProcessRouteVersionCopyBo bo) {
-		// 复制版本
+		// 复制版本：完整复制工序图、资源、工步图、设备挂载到新版本
 		ProcessRouteVersion source = routeVersionMapper.selectById(sourceVersionId);
 		if (source == null) {
 			log.warn("复制版本失败, 源版本不存在, sourceVersionId={}", sourceVersionId);
@@ -131,93 +131,21 @@ public class ProcessRouteVersionServiceImpl implements ProcessRouteVersionServic
 		routeVersionMapper.insert(target);
 		log.info("开始复制版本, sourceVersionId={}, targetVersionId={}", sourceVersionId, target.getId());
 
-		Map<Long, Long> processNodeMap = new HashMap<>();
 		List<ProcessNode> processNodes = listProcessNodes(sourceVersionId);
-		for (ProcessNode node : processNodes) {
-			ProcessNode copy = new ProcessNode();
-			copy.setRouteVersionId(target.getId());
-			copy.setNodeCode(node.getNodeCode());
-			copy.setNodeName(node.getNodeName());
-			copy.setNodeType(node.getNodeType());
-			copy.setCriticalFlag(node.getCriticalFlag());
-			copy.setDurationMinutes(node.getDurationMinutes());
-			copy.setPositionX(node.getPositionX());
-			copy.setPositionY(node.getPositionY());
-			copy.setStatus(node.getStatus());
-			processNodeMapper.insert(copy);
-			processNodeMap.put(node.getId(), copy.getId());
-		}
+		Map<Long, Long> processNodeMap = copyProcessNodes(target.getId(), processNodes);
 		List<ProcessEdge> processEdges = listProcessEdges(sourceVersionId);
-		for (ProcessEdge edge : processEdges) {
-			ProcessEdge copy = new ProcessEdge();
-			copy.setRouteVersionId(target.getId());
-			copy.setFromNodeId(processNodeMap.get(edge.getFromNodeId()));
-			copy.setToNodeId(processNodeMap.get(edge.getToNodeId()));
-			copy.setDependencyType(edge.getDependencyType());
-			copy.setDependencyStrength(edge.getDependencyStrength());
-			copy.setLagMinutes(edge.getLagMinutes());
-			processEdgeMapper.insert(copy);
-		}
+		copyProcessEdges(target.getId(), processNodeMap, processEdges);
 
-		Map<Long, Long> resourceMap = new HashMap<>();
 		List<ResourceRoom> resources = listResources(sourceVersionId);
-		for (ResourceRoom resource : resources) {
-			ResourceRoom copy = new ResourceRoom();
-			copy.setRouteVersionId(target.getId());
-			copy.setProcessNodeId(processNodeMap.get(resource.getProcessNodeId()));
-			copy.setResourceCode(resource.getResourceCode());
-			copy.setResourceName(resource.getResourceName());
-			copy.setPriority(resource.getPriority());
-			copy.setSetupMinutes(resource.getSetupMinutes());
-			copy.setEnabled(resource.getEnabled());
-			copy.setStatus(resource.getStatus());
-			copy.setRemark(resource.getRemark());
-			resourceRoomMapper.insert(copy);
-			resourceMap.put(resource.getId(), copy.getId());
-		}
+		Map<Long, Long> resourceMap = copyResources(target.getId(), processNodeMap, resources);
 
-		Map<Long, Long> stepNodeMap = new HashMap<>();
 		List<StepNode> stepNodes = listStepNodes(sourceVersionId);
-		for (StepNode node : stepNodes) {
-			StepNode copy = new StepNode();
-			copy.setRouteVersionId(target.getId());
-			copy.setResourceRoomId(resourceMap.get(node.getResourceRoomId()));
-			copy.setNodeCode(node.getNodeCode());
-			copy.setNodeName(node.getNodeName());
-			copy.setNodeType(node.getNodeType());
-			copy.setQcFlag(node.getQcFlag());
-			copy.setDurationMinutes(node.getDurationMinutes());
-			copy.setPositionX(node.getPositionX());
-			copy.setPositionY(node.getPositionY());
-			copy.setStatus(node.getStatus());
-			stepNodeMapper.insert(copy);
-			stepNodeMap.put(node.getId(), copy.getId());
-		}
-
+		Map<Long, Long> stepNodeMap = copyStepNodes(target.getId(), resourceMap, stepNodes);
 		List<StepEdge> stepEdges = listStepEdges(sourceVersionId);
-		for (StepEdge edge : stepEdges) {
-			StepEdge copy = new StepEdge();
-			copy.setRouteVersionId(target.getId());
-			copy.setResourceRoomId(resourceMap.get(edge.getResourceRoomId()));
-			copy.setFromNodeId(stepNodeMap.get(edge.getFromNodeId()));
-			copy.setToNodeId(stepNodeMap.get(edge.getToNodeId()));
-			copy.setDependencyType(edge.getDependencyType());
-			copy.setDependencyStrength(edge.getDependencyStrength());
-			copy.setLagMinutes(edge.getLagMinutes());
-			stepEdgeMapper.insert(copy);
-		}
+		copyStepEdges(target.getId(), resourceMap, stepNodeMap, stepEdges);
 
 		List<DeviceMount> mounts = listDeviceMounts(sourceVersionId);
-		for (DeviceMount mount : mounts) {
-			DeviceMount copy = new DeviceMount();
-			copy.setRouteVersionId(target.getId());
-			copy.setResourceRoomId(resourceMap.get(mount.getResourceRoomId()));
-			copy.setStepNodeId(stepNodeMap.get(mount.getStepNodeId()));
-			copy.setDeviceId(mount.getDeviceId());
-			copy.setMountType(mount.getMountType());
-			copy.setRemark(mount.getRemark());
-			deviceMountMapper.insert(copy);
-		}
+		copyDeviceMounts(target.getId(), resourceMap, stepNodeMap, mounts);
 		log.info("复制版本完成, sourceVersionId={}, targetVersionId={}", sourceVersionId, target.getId());
 		return target.getId();
 	}
@@ -225,7 +153,7 @@ public class ProcessRouteVersionServiceImpl implements ProcessRouteVersionServic
 	@Override
 	@Transactional(rollbackFor = Exception.class)
 	public GraphValidationResultVO release(Long versionId) {
-		// 发布版本，强制校验
+		// 发布版本，强制校验（工序图 + 资源 + 工步图）
 		ProcessRouteVersion version = routeVersionMapper.selectById(versionId);
 		if (version == null) {
 			log.warn("发布失败, 版本不存在, versionId={}", versionId);
@@ -237,37 +165,11 @@ public class ProcessRouteVersionServiceImpl implements ProcessRouteVersionServic
 		}
 		List<ProcessNode> processNodes = listProcessNodes(versionId);
 		List<ProcessEdge> processEdges = listProcessEdges(versionId);
-		GraphValidationResultVO processResult = graphValidationService.validateProcessEntities(processNodes,
-				processEdges);
-		List<GraphValidationErrorVO> errors = new ArrayList<>();
-		if (!processResult.isValid()) {
-			errors.addAll(processResult.getErrors());
-		}
-		Map<Long, Integer> resourceCountMap = new HashMap<>();
 		List<ResourceRoom> resources = listResources(versionId);
-		for (ResourceRoom resource : resources) {
-			resourceCountMap.put(resource.getProcessNodeId(),
-					resourceCountMap.getOrDefault(resource.getProcessNodeId(), 0) + 1);
-		}
-		for (ProcessNode node : processNodes) {
-			if (resourceCountMap.getOrDefault(node.getId(), 0) == 0) {
-				GraphValidationErrorVO error = new GraphValidationErrorVO();
-				error.setCode("RESOURCE_MISSING");
-				error.setMessage("工序必须配置至少一个资源");
-				error.setNodeId(node.getId());
-				errors.add(error);
-			}
-		}
-		Map<Long, List<StepNode>> stepNodeGroup = groupStepNodes(resources);
-		Map<Long, List<StepEdge>> stepEdgeGroup = groupStepEdges(resources);
-		for (ResourceRoom resource : resources) {
-			List<StepNode> stepNodes = stepNodeGroup.get(resource.getId());
-			List<StepEdge> stepEdges = stepEdgeGroup.get(resource.getId());
-			GraphValidationResultVO stepResult = graphValidationService.validateStepEntities(stepNodes, stepEdges);
-			if (!stepResult.isValid()) {
-				errors.addAll(stepResult.getErrors());
-			}
-		}
+		List<GraphValidationErrorVO> errors = new ArrayList<>();
+		appendGraphErrors(errors, graphValidationService.validateProcessEntities(processNodes, processEdges));
+		appendResourceErrors(errors, processNodes, resources);
+		appendStepGraphErrors(errors, resources);
 		GraphValidationResultVO result = new GraphValidationResultVO();
 		result.setErrors(errors);
 		result.setValid(errors.isEmpty());
@@ -282,6 +184,155 @@ public class ProcessRouteVersionServiceImpl implements ProcessRouteVersionServic
 			log.warn("发布失败, versionId={}, errorCount={}", versionId, errors.size());
 		}
 		return result;
+	}
+
+	private Map<Long, Long> copyProcessNodes(Long targetVersionId, List<ProcessNode> processNodes) {
+		// 复制工序节点并返回旧新ID映射
+		Map<Long, Long> processNodeMap = new HashMap<>();
+		for (ProcessNode node : processNodes) {
+			ProcessNode copy = new ProcessNode();
+			copy.setRouteVersionId(targetVersionId);
+			copy.setNodeCode(node.getNodeCode());
+			copy.setNodeName(node.getNodeName());
+			copy.setNodeType(node.getNodeType());
+			copy.setCriticalFlag(node.getCriticalFlag());
+			copy.setDurationMinutes(node.getDurationMinutes());
+			copy.setPositionX(node.getPositionX());
+			copy.setPositionY(node.getPositionY());
+			copy.setStatus(node.getStatus());
+			processNodeMapper.insert(copy);
+			processNodeMap.put(node.getId(), copy.getId());
+		}
+		return processNodeMap;
+	}
+
+	private void copyProcessEdges(Long targetVersionId, Map<Long, Long> processNodeMap,
+			List<ProcessEdge> processEdges) {
+		// 复制工序依赖边
+		for (ProcessEdge edge : processEdges) {
+			ProcessEdge copy = new ProcessEdge();
+			copy.setRouteVersionId(targetVersionId);
+			copy.setFromNodeId(processNodeMap.get(edge.getFromNodeId()));
+			copy.setToNodeId(processNodeMap.get(edge.getToNodeId()));
+			copy.setDependencyType(edge.getDependencyType());
+			copy.setDependencyStrength(edge.getDependencyStrength());
+			copy.setLagMinutes(edge.getLagMinutes());
+			processEdgeMapper.insert(copy);
+		}
+	}
+
+	private Map<Long, Long> copyResources(Long targetVersionId, Map<Long, Long> processNodeMap,
+			List<ResourceRoom> resources) {
+		// 复制资源并返回旧新ID映射
+		Map<Long, Long> resourceMap = new HashMap<>();
+		for (ResourceRoom resource : resources) {
+			ResourceRoom copy = new ResourceRoom();
+			copy.setRouteVersionId(targetVersionId);
+			copy.setProcessNodeId(processNodeMap.get(resource.getProcessNodeId()));
+			copy.setResourceCode(resource.getResourceCode());
+			copy.setResourceName(resource.getResourceName());
+			copy.setPriority(resource.getPriority());
+			copy.setSetupMinutes(resource.getSetupMinutes());
+			copy.setEnabled(resource.getEnabled());
+			copy.setStatus(resource.getStatus());
+			copy.setRemark(resource.getRemark());
+			resourceRoomMapper.insert(copy);
+			resourceMap.put(resource.getId(), copy.getId());
+		}
+		return resourceMap;
+	}
+
+	private Map<Long, Long> copyStepNodes(Long targetVersionId, Map<Long, Long> resourceMap,
+			List<StepNode> stepNodes) {
+		// 复制工步节点并返回旧新ID映射
+		Map<Long, Long> stepNodeMap = new HashMap<>();
+		for (StepNode node : stepNodes) {
+			StepNode copy = new StepNode();
+			copy.setRouteVersionId(targetVersionId);
+			copy.setResourceRoomId(resourceMap.get(node.getResourceRoomId()));
+			copy.setNodeCode(node.getNodeCode());
+			copy.setNodeName(node.getNodeName());
+			copy.setNodeType(node.getNodeType());
+			copy.setQcFlag(node.getQcFlag());
+			copy.setDurationMinutes(node.getDurationMinutes());
+			copy.setPositionX(node.getPositionX());
+			copy.setPositionY(node.getPositionY());
+			copy.setStatus(node.getStatus());
+			stepNodeMapper.insert(copy);
+			stepNodeMap.put(node.getId(), copy.getId());
+		}
+		return stepNodeMap;
+	}
+
+	private void copyStepEdges(Long targetVersionId, Map<Long, Long> resourceMap, Map<Long, Long> stepNodeMap,
+			List<StepEdge> stepEdges) {
+		// 复制工步依赖边
+		for (StepEdge edge : stepEdges) {
+			StepEdge copy = new StepEdge();
+			copy.setRouteVersionId(targetVersionId);
+			copy.setResourceRoomId(resourceMap.get(edge.getResourceRoomId()));
+			copy.setFromNodeId(stepNodeMap.get(edge.getFromNodeId()));
+			copy.setToNodeId(stepNodeMap.get(edge.getToNodeId()));
+			copy.setDependencyType(edge.getDependencyType());
+			copy.setDependencyStrength(edge.getDependencyStrength());
+			copy.setLagMinutes(edge.getLagMinutes());
+			stepEdgeMapper.insert(copy);
+		}
+	}
+
+	private void copyDeviceMounts(Long targetVersionId, Map<Long, Long> resourceMap, Map<Long, Long> stepNodeMap,
+			List<DeviceMount> mounts) {
+		// 复制设备挂载
+		for (DeviceMount mount : mounts) {
+			DeviceMount copy = new DeviceMount();
+			copy.setRouteVersionId(targetVersionId);
+			copy.setResourceRoomId(resourceMap.get(mount.getResourceRoomId()));
+			copy.setStepNodeId(stepNodeMap.get(mount.getStepNodeId()));
+			copy.setDeviceId(mount.getDeviceId());
+			copy.setMountType(mount.getMountType());
+			copy.setRemark(mount.getRemark());
+			deviceMountMapper.insert(copy);
+		}
+	}
+
+	private void appendGraphErrors(List<GraphValidationErrorVO> errors, GraphValidationResultVO result) {
+		// 追加图校验错误
+		if (result != null && !result.isValid() && !CollectionUtils.isEmpty(result.getErrors())) {
+			errors.addAll(result.getErrors());
+		}
+	}
+
+	private void appendResourceErrors(List<GraphValidationErrorVO> errors, List<ProcessNode> processNodes,
+			List<ResourceRoom> resources) {
+		// 追加资源配置错误
+		Map<Long, Integer> resourceCountMap = new HashMap<>();
+		for (ResourceRoom resource : resources) {
+			resourceCountMap.put(resource.getProcessNodeId(),
+					resourceCountMap.getOrDefault(resource.getProcessNodeId(), 0) + 1);
+		}
+		for (ProcessNode node : processNodes) {
+			if (resourceCountMap.getOrDefault(node.getId(), 0) == 0) {
+				GraphValidationErrorVO error = new GraphValidationErrorVO();
+				error.setCode("RESOURCE_MISSING");
+				error.setMessage("工序必须配置至少一个资源");
+				error.setNodeId(node.getId());
+				errors.add(error);
+			}
+		}
+	}
+
+	private void appendStepGraphErrors(List<GraphValidationErrorVO> errors, List<ResourceRoom> resources) {
+		// 追加工步图校验错误
+		Map<Long, List<StepNode>> stepNodeGroup = groupStepNodes(resources);
+		Map<Long, List<StepEdge>> stepEdgeGroup = groupStepEdges(resources);
+		for (ResourceRoom resource : resources) {
+			List<StepNode> stepNodes = stepNodeGroup.get(resource.getId());
+			List<StepEdge> stepEdges = stepEdgeGroup.get(resource.getId());
+			GraphValidationResultVO stepResult = graphValidationService.validateStepEntities(stepNodes, stepEdges);
+			if (stepResult != null && !stepResult.isValid() && !CollectionUtils.isEmpty(stepResult.getErrors())) {
+				errors.addAll(stepResult.getErrors());
+			}
+		}
 	}
 
 	private GraphValidationResultVO buildFail(String code, String message) {
