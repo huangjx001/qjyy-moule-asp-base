@@ -16,14 +16,8 @@ public class StepNodeVO {
 	@ApiModelProperty(value = "工步基础数据ID")
 	private Long stepBaseId;
 
-	@ApiModelProperty(value = "工步编码")
-	private String nodeCode;
-
 	@ApiModelProperty(value = "工步名称")
 	private String nodeName;
-
-	@ApiModelProperty(value = "工步类型")
-	private String nodeType;
 
 	@ApiModelProperty(value = "是否QC点")
 	private Integer qcFlag;

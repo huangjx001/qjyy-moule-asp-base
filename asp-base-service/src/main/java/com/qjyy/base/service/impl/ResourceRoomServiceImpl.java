@@ -140,7 +140,6 @@ public class ResourceRoomServiceImpl implements ResourceRoomService {
 		if (base == null) {
 			return false;
 		}
-		bo.setResourceCode(base.getResourceCode());
 		bo.setResourceName(base.getResourceName());
 		if (bo.getSetupMinutes() == null) {
 			bo.setSetupMinutes(base.getDefaultSetupMinutes());

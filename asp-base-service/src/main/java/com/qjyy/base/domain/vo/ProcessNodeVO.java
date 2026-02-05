@@ -16,14 +16,8 @@ public class ProcessNodeVO {
 	@ApiModelProperty(value = "工序基础数据ID")
 	private Long processBaseId;
 
-	@ApiModelProperty(value = "工序编码")
-	private String nodeCode;
-
 	@ApiModelProperty(value = "工序名称")
 	private String nodeName;
-
-	@ApiModelProperty(value = "工序类型")
-	private String nodeType;
 
 	@ApiModelProperty(value = "是否关键")
 	private Integer criticalFlag;

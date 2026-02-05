@@ -148,9 +148,7 @@ public class ProcessGraphServiceImpl implements ProcessGraphService {
 		if (base == null) {
 			return;
 		}
-		nodeBo.setNodeCode(base.getProcessCode());
 		nodeBo.setNodeName(base.getProcessName());
-		nodeBo.setNodeType(base.getProcessType());
 		if (nodeBo.getDurationMinutes() == null) {
 			nodeBo.setDurationMinutes(base.getDefaultDurationMinutes());
 		}

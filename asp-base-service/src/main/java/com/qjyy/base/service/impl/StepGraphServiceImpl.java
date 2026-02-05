@@ -147,9 +147,7 @@ public class StepGraphServiceImpl implements StepGraphService {
 		if (base == null) {
 			return;
 		}
-		nodeBo.setNodeCode(base.getStepCode());
 		nodeBo.setNodeName(base.getStepName());
-		nodeBo.setNodeType(base.getStepType());
 		if (nodeBo.getDurationMinutes() == null) {
 			nodeBo.setDurationMinutes(base.getDefaultDurationMinutes());
 		}

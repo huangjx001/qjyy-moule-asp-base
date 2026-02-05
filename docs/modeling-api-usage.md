@@ -15,7 +15,7 @@
 
 ## 2. 接口说明与要点
 
-> 工序/工步/资源基础数据由主数据模块统一维护，建模时通过 `*_base_id` 进行引用，并保留快照字段用于版本冻结。
+> 工序/工步/资源基础数据由主数据模块统一维护，建模时通过 `*_base_id` 进行引用，并仅保留名称快照字段用于版本冻结，降低冗余。
 
 ### 2.0 工序/工步/资源基础数据
 
@@ -57,6 +57,7 @@
 - `POST /graphs/process/save`：保存工序图。
 - `POST /graphs/process/validate`：校验工序图。
 - `GET /versions/{id}/ops-graph`：返回工序摘要（R/S/E 与状态）。
+- 说明：`nodes` 中仅保留 `processBaseId` + `nodeName`（可选，默认取基础数据名称），不再传 `code/type` 等冗余字段。
 
 ### 2.3 工序资源（房间）
 
@@ -64,6 +65,7 @@
 - `PUT /resources/{id}`：更新资源。
 - `DELETE /resources/{id}`：删除资源（同时删除其工步与挂载）。
 - `GET /process-nodes/{processNodeId}/resources`：工序资源列表。
+- 说明：资源创建仅保留 `resourceBaseId` + `resourceName`（可选，默认取基础数据名称）。
 
 ### 2.4 工步画布（二级画布）
 
@@ -71,6 +73,7 @@
 - `POST /graphs/step/save`：保存工步图。
 - `POST /graphs/step/validate`：校验工步图。
 - `GET /graphs/step/nodes/{stepNodeId}/relations`：工步关联关系。
+- 说明：`nodes` 中仅保留 `stepBaseId` + `nodeName`（可选，默认取基础数据名称），不再传 `code/type` 等冗余字段。
 
 ### 2.5 设备挂载与汇总
 
