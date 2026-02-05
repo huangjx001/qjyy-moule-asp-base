@@ -13,6 +13,7 @@ import com.qjyy.base.domain.bo.ProcessRouteVersionSaveBo;
 import com.qjyy.base.domain.bo.ResourceRoomSaveBo;
 import com.qjyy.base.domain.bo.StepEdgeBo;
 import com.qjyy.base.domain.bo.StepNodeBo;
+import com.qjyy.base.domain.entity.DeviceMount;
 import com.qjyy.base.domain.entity.ProcessEdge;
 import com.qjyy.base.domain.entity.ProcessNode;
 import com.qjyy.base.domain.entity.ProcessRoute;
@@ -63,4 +64,16 @@ public interface RouteConvert {
 	StepNode toStepNode(StepNodeBo bo);
 
 	StepEdge toStepEdge(StepEdgeBo bo);
+
+	ProcessNode toProcessNode(ProcessNode source);
+
+	ProcessEdge toProcessEdge(ProcessEdge source);
+
+	ResourceRoom toResourceRoom(ResourceRoom source);
+
+	StepNode toStepNode(StepNode source);
+
+	StepEdge toStepEdge(StepEdge source);
+
+	DeviceMount toDeviceMount(DeviceMount source);
 }

@@ -190,16 +190,9 @@ public class ProcessRouteVersionServiceImpl implements ProcessRouteVersionServic
 		// 复制工序节点并返回旧新ID映射
 		Map<Long, Long> processNodeMap = new HashMap<>();
 		for (ProcessNode node : processNodes) {
-			ProcessNode copy = new ProcessNode();
+			ProcessNode copy = routeConvert.toProcessNode(node);
+			copy.setId(null);
 			copy.setRouteVersionId(targetVersionId);
-			copy.setNodeCode(node.getNodeCode());
-			copy.setNodeName(node.getNodeName());
-			copy.setNodeType(node.getNodeType());
-			copy.setCriticalFlag(node.getCriticalFlag());
-			copy.setDurationMinutes(node.getDurationMinutes());
-			copy.setPositionX(node.getPositionX());
-			copy.setPositionY(node.getPositionY());
-			copy.setStatus(node.getStatus());
 			processNodeMapper.insert(copy);
 			processNodeMap.put(node.getId(), copy.getId());
 		}
@@ -210,13 +203,11 @@ public class ProcessRouteVersionServiceImpl implements ProcessRouteVersionServic
 			List<ProcessEdge> processEdges) {
 		// 复制工序依赖边
 		for (ProcessEdge edge : processEdges) {
-			ProcessEdge copy = new ProcessEdge();
+			ProcessEdge copy = routeConvert.toProcessEdge(edge);
+			copy.setId(null);
 			copy.setRouteVersionId(targetVersionId);
 			copy.setFromNodeId(processNodeMap.get(edge.getFromNodeId()));
 			copy.setToNodeId(processNodeMap.get(edge.getToNodeId()));
-			copy.setDependencyType(edge.getDependencyType());
-			copy.setDependencyStrength(edge.getDependencyStrength());
-			copy.setLagMinutes(edge.getLagMinutes());
 			processEdgeMapper.insert(copy);
 		}
 	}
@@ -226,16 +217,10 @@ public class ProcessRouteVersionServiceImpl implements ProcessRouteVersionServic
 		// 复制资源并返回旧新ID映射
 		Map<Long, Long> resourceMap = new HashMap<>();
 		for (ResourceRoom resource : resources) {
-			ResourceRoom copy = new ResourceRoom();
+			ResourceRoom copy = routeConvert.toResourceRoom(resource);
+			copy.setId(null);
 			copy.setRouteVersionId(targetVersionId);
 			copy.setProcessNodeId(processNodeMap.get(resource.getProcessNodeId()));
-			copy.setResourceCode(resource.getResourceCode());
-			copy.setResourceName(resource.getResourceName());
-			copy.setPriority(resource.getPriority());
-			copy.setSetupMinutes(resource.getSetupMinutes());
-			copy.setEnabled(resource.getEnabled());
-			copy.setStatus(resource.getStatus());
-			copy.setRemark(resource.getRemark());
 			resourceRoomMapper.insert(copy);
 			resourceMap.put(resource.getId(), copy.getId());
 		}
@@ -247,17 +232,10 @@ public class ProcessRouteVersionServiceImpl implements ProcessRouteVersionServic
 		// 复制工步节点并返回旧新ID映射
 		Map<Long, Long> stepNodeMap = new HashMap<>();
 		for (StepNode node : stepNodes) {
-			StepNode copy = new StepNode();
+			StepNode copy = routeConvert.toStepNode(node);
+			copy.setId(null);
 			copy.setRouteVersionId(targetVersionId);
 			copy.setResourceRoomId(resourceMap.get(node.getResourceRoomId()));
-			copy.setNodeCode(node.getNodeCode());
-			copy.setNodeName(node.getNodeName());
-			copy.setNodeType(node.getNodeType());
-			copy.setQcFlag(node.getQcFlag());
-			copy.setDurationMinutes(node.getDurationMinutes());
-			copy.setPositionX(node.getPositionX());
-			copy.setPositionY(node.getPositionY());
-			copy.setStatus(node.getStatus());
 			stepNodeMapper.insert(copy);
 			stepNodeMap.put(node.getId(), copy.getId());
 		}
@@ -268,14 +246,12 @@ public class ProcessRouteVersionServiceImpl implements ProcessRouteVersionServic
 			List<StepEdge> stepEdges) {
 		// 复制工步依赖边
 		for (StepEdge edge : stepEdges) {
-			StepEdge copy = new StepEdge();
+			StepEdge copy = routeConvert.toStepEdge(edge);
+			copy.setId(null);
 			copy.setRouteVersionId(targetVersionId);
 			copy.setResourceRoomId(resourceMap.get(edge.getResourceRoomId()));
 			copy.setFromNodeId(stepNodeMap.get(edge.getFromNodeId()));
 			copy.setToNodeId(stepNodeMap.get(edge.getToNodeId()));
-			copy.setDependencyType(edge.getDependencyType());
-			copy.setDependencyStrength(edge.getDependencyStrength());
-			copy.setLagMinutes(edge.getLagMinutes());
 			stepEdgeMapper.insert(copy);
 		}
 	}
@@ -284,13 +260,11 @@ public class ProcessRouteVersionServiceImpl implements ProcessRouteVersionServic
 			List<DeviceMount> mounts) {
 		// 复制设备挂载
 		for (DeviceMount mount : mounts) {
-			DeviceMount copy = new DeviceMount();
+			DeviceMount copy = routeConvert.toDeviceMount(mount);
+			copy.setId(null);
 			copy.setRouteVersionId(targetVersionId);
 			copy.setResourceRoomId(resourceMap.get(mount.getResourceRoomId()));
 			copy.setStepNodeId(stepNodeMap.get(mount.getStepNodeId()));
-			copy.setDeviceId(mount.getDeviceId());
-			copy.setMountType(mount.getMountType());
-			copy.setRemark(mount.getRemark());
 			deviceMountMapper.insert(copy);
 		}
 	}
