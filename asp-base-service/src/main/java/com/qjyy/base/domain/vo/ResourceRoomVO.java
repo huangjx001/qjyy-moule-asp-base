@@ -17,8 +17,8 @@ public class ResourceRoomVO {
 	@ApiModelProperty(value = "工序ID")
 	private Long processNodeId;
 
-	@ApiModelProperty(value = "资源编码")
-	private String resourceCode;
+	@ApiModelProperty(value = "资源基础数据ID")
+	private Long resourceBaseId;
 
 	@ApiModelProperty(value = "资源名称")
 	private String resourceName;

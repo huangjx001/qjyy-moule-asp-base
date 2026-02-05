@@ -5,9 +5,6 @@ CREATE TABLE IF NOT EXISTS process_route (
     id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '主键ID',
     route_code VARCHAR(64) NOT NULL COMMENT '路线编码',
     route_name VARCHAR(128) NOT NULL COMMENT '路线名称',
-    product_code VARCHAR(64) DEFAULT NULL COMMENT '产品编码',
-    product_name VARCHAR(128) DEFAULT NULL COMMENT '产品名称',
-    dosage_form VARCHAR(64) DEFAULT NULL COMMENT '剂型',
     remark VARCHAR(255) DEFAULT NULL COMMENT '备注',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
@@ -30,12 +27,38 @@ CREATE TABLE IF NOT EXISTS process_route_version (
     UNIQUE KEY uk_route_version_code (route_id, version_code)
 ) COMMENT='工艺路线版本';
 
+CREATE TABLE IF NOT EXISTS process_route_product (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '主键ID',
+    route_id BIGINT NOT NULL COMMENT '路线ID',
+    product_code VARCHAR(64) DEFAULT NULL COMMENT '产品编码(为空表示默认路线)',
+    is_default TINYINT NOT NULL DEFAULT 0 COMMENT '是否默认路线',
+    enabled TINYINT NOT NULL DEFAULT 1 COMMENT '是否启用',
+    remark VARCHAR(255) DEFAULT NULL COMMENT '备注',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    KEY idx_route_product_route (route_id),
+    KEY idx_route_product_code (product_code)
+) COMMENT='路线-产品关联';
+
+CREATE TABLE IF NOT EXISTS process_base (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '主键ID',
+    process_code VARCHAR(64) NOT NULL COMMENT '工序编码',
+    process_name VARCHAR(128) NOT NULL COMMENT '工序名称',
+    process_type VARCHAR(64) DEFAULT NULL COMMENT '工序类型',
+    default_duration_minutes INT DEFAULT NULL COMMENT '默认时长(分钟)',
+    critical_flag TINYINT DEFAULT 0 COMMENT '是否关键工序',
+    enabled TINYINT NOT NULL DEFAULT 1 COMMENT '是否启用',
+    remark VARCHAR(255) DEFAULT NULL COMMENT '备注',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    UNIQUE KEY uk_process_base_code (process_code)
+) COMMENT='工序基础数据';
+
 CREATE TABLE IF NOT EXISTS process_node (
     id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '主键ID',
     route_version_id BIGINT NOT NULL COMMENT '版本ID',
-    node_code VARCHAR(64) NOT NULL COMMENT '工序编码',
+    process_base_id BIGINT DEFAULT NULL COMMENT '工序基础数据ID',
     node_name VARCHAR(128) NOT NULL COMMENT '工序名称',
-    node_type VARCHAR(64) DEFAULT NULL COMMENT '工序类型',
     critical_flag TINYINT DEFAULT 0 COMMENT '是否关键工序',
     duration_minutes INT DEFAULT NULL COMMENT '时长(分钟)',
     position_x DECIMAL(10,2) DEFAULT NULL COMMENT '画布X坐标',
@@ -43,7 +66,8 @@ CREATE TABLE IF NOT EXISTS process_node (
     status VARCHAR(32) DEFAULT NULL COMMENT '状态',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    KEY idx_process_node_version (route_version_id)
+    KEY idx_process_node_version (route_version_id),
+    KEY idx_process_node_base (process_base_id)
 ) COMMENT='工序节点';
 
 CREATE TABLE IF NOT EXISTS process_edge (
@@ -61,11 +85,25 @@ CREATE TABLE IF NOT EXISTS process_edge (
     KEY idx_process_edge_to (to_node_id)
 ) COMMENT='工序依赖边';
 
+CREATE TABLE IF NOT EXISTS resource_base (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '主键ID',
+    resource_code VARCHAR(64) NOT NULL COMMENT '资源编码',
+    resource_name VARCHAR(128) NOT NULL COMMENT '资源名称',
+    resource_type VARCHAR(64) DEFAULT NULL COMMENT '资源类型',
+    capacity_desc VARCHAR(255) DEFAULT NULL COMMENT '能力/规格描述',
+    default_setup_minutes INT DEFAULT 0 COMMENT '默认清场/换线时间(分钟)',
+    enabled TINYINT NOT NULL DEFAULT 1 COMMENT '是否启用',
+    remark VARCHAR(255) DEFAULT NULL COMMENT '备注',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    UNIQUE KEY uk_resource_base_code (resource_code)
+) COMMENT='资源基础数据';
+
 CREATE TABLE IF NOT EXISTS resource_room (
     id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '主键ID',
     route_version_id BIGINT NOT NULL COMMENT '版本ID',
     process_node_id BIGINT NOT NULL COMMENT '工序ID',
-    resource_code VARCHAR(64) NOT NULL COMMENT '资源编码',
+    resource_base_id BIGINT DEFAULT NULL COMMENT '资源基础数据ID',
     resource_name VARCHAR(128) NOT NULL COMMENT '资源名称',
     priority INT DEFAULT 0 COMMENT '优先级',
     setup_minutes INT DEFAULT 0 COMMENT '清场/换线时间(分钟)',
@@ -75,16 +113,30 @@ CREATE TABLE IF NOT EXISTS resource_room (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     KEY idx_resource_room_version (route_version_id),
-    KEY idx_resource_room_process (process_node_id)
+    KEY idx_resource_room_process (process_node_id),
+    KEY idx_resource_room_base (resource_base_id)
 ) COMMENT='工序资源(房间)';
+
+CREATE TABLE IF NOT EXISTS step_base (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '主键ID',
+    step_code VARCHAR(64) NOT NULL COMMENT '工步编码',
+    step_name VARCHAR(128) NOT NULL COMMENT '工步名称',
+    step_type VARCHAR(64) DEFAULT NULL COMMENT '工步类型',
+    default_duration_minutes INT DEFAULT NULL COMMENT '默认时长(分钟)',
+    qc_flag TINYINT DEFAULT 0 COMMENT '是否QC点',
+    enabled TINYINT NOT NULL DEFAULT 1 COMMENT '是否启用',
+    remark VARCHAR(255) DEFAULT NULL COMMENT '备注',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    UNIQUE KEY uk_step_base_code (step_code)
+) COMMENT='工步基础数据';
 
 CREATE TABLE IF NOT EXISTS step_node (
     id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '主键ID',
     route_version_id BIGINT NOT NULL COMMENT '版本ID',
     resource_room_id BIGINT NOT NULL COMMENT '资源ID',
-    node_code VARCHAR(64) NOT NULL COMMENT '工步编码',
+    step_base_id BIGINT DEFAULT NULL COMMENT '工步基础数据ID',
     node_name VARCHAR(128) NOT NULL COMMENT '工步名称',
-    node_type VARCHAR(64) DEFAULT NULL COMMENT '工步类型',
     qc_flag TINYINT DEFAULT 0 COMMENT '是否QC点',
     duration_minutes INT DEFAULT NULL COMMENT '时长(分钟)',
     position_x DECIMAL(10,2) DEFAULT NULL COMMENT '画布X坐标',
@@ -93,7 +145,8 @@ CREATE TABLE IF NOT EXISTS step_node (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     KEY idx_step_node_version (route_version_id),
-    KEY idx_step_node_resource (resource_room_id)
+    KEY idx_step_node_resource (resource_room_id),
+    KEY idx_step_node_base (step_base_id)
 ) COMMENT='工步节点';
 
 CREATE TABLE IF NOT EXISTS step_edge (

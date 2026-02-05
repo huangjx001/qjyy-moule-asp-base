@@ -2,6 +2,7 @@
 
 ## 1. MVP 使用顺序（闭环跑通）
 
+0. **维护基础数据** → 工序/工步/资源主数据准备完毕（供建模引用）。
 1. **创建路线** → `POST /routes`
 2. **创建版本** → `POST /route-versions`
 3. **维护工序图** → `POST /graphs/process/save`（也可先 `/validate`）
@@ -13,6 +14,29 @@
 > 发布时会强制校验：工序图 + 所有资源下的工步图 + 依赖参数合法性。通过后版本冻结。
 
 ## 2. 接口说明与要点
+
+> 工序/工步/资源基础数据由主数据模块统一维护，建模时通过 `*_base_id` 进行引用，并仅保留名称快照字段用于版本冻结，降低冗余。产品信息通过物料编码关联 NC65 物料主数据，产品-路线关系由关联表维护（未配置则走默认路线）。
+
+### 2.0 工序/工步/资源基础数据
+
+- `POST /process-bases`：创建工序基础数据。
+- `PUT /process-bases/{id}`：更新工序基础数据。
+- `DELETE /process-bases/{id}`：删除工序基础数据。
+- `GET /process-bases/{id}`：工序基础数据详情。
+- `GET /process-bases/list`：工序基础数据列表。
+- `GET /process-bases/options?keyword=...`：工序基础数据下拉（仅启用）。
+- `POST /resource-bases`：创建资源基础数据。
+- `PUT /resource-bases/{id}`：更新资源基础数据。
+- `DELETE /resource-bases/{id}`：删除资源基础数据。
+- `GET /resource-bases/{id}`：资源基础数据详情。
+- `GET /resource-bases/list`：资源基础数据列表。
+- `GET /resource-bases/options?keyword=...`：资源基础数据下拉（仅启用）。
+- `POST /step-bases`：创建工步基础数据。
+- `PUT /step-bases/{id}`：更新工步基础数据。
+- `DELETE /step-bases/{id}`：删除工步基础数据。
+- `GET /step-bases/{id}`：工步基础数据详情。
+- `GET /step-bases/list`：工步基础数据列表。
+- `GET /step-bases/options?keyword=...`：工步基础数据下拉（仅启用）。
 
 ### 2.1 路线与版本
 
@@ -26,6 +50,15 @@
 - `GET /route-versions/list?routeId=...`：版本列表。
 - `POST /route-versions/{id}/copy`：复制版本（深拷贝工序/资源/工步/挂载）。
 - `POST /route-versions/{id}/release`：发布版本（强制校验）。
+- 说明：产品与路线的绑定由关联表维护，未绑定走默认路线。
+
+### 2.1.1 路线-产品关联
+
+- `POST /route-products`：创建关联（可设置 `isDefault` 作为默认路线）。
+- `PUT /route-products/{id}`：更新关联。
+- `DELETE /route-products/{id}`：删除关联。
+- `GET /route-products/list?productCode=...`：关联列表。
+- `GET /route-products/resolve?productCode=...`：按产品解析路线（无配置走默认）。
 
 ### 2.2 工序画布（一级画布）
 
@@ -33,6 +66,7 @@
 - `POST /graphs/process/save`：保存工序图。
 - `POST /graphs/process/validate`：校验工序图。
 - `GET /versions/{id}/ops-graph`：返回工序摘要（R/S/E 与状态）。
+- 说明：`nodes` 中仅保留 `processBaseId` + `nodeName`（可选，默认取基础数据名称），不再传 `code/type` 等冗余字段。
 
 ### 2.3 工序资源（房间）
 
@@ -40,12 +74,15 @@
 - `PUT /resources/{id}`：更新资源。
 - `DELETE /resources/{id}`：删除资源（同时删除其工步与挂载）。
 - `GET /process-nodes/{processNodeId}/resources`：工序资源列表。
+- 说明：资源创建仅保留 `resourceBaseId` + `resourceName`（可选，默认取基础数据名称）。
 
 ### 2.4 工步画布（二级画布）
 
 - `GET /graphs/step/{resourceRoomId}`：获取工步图（入口必须是资源）。
 - `POST /graphs/step/save`：保存工步图。
 - `POST /graphs/step/validate`：校验工步图。
+- `GET /graphs/step/nodes/{stepNodeId}/relations`：工步关联关系。
+- 说明：`nodes` 中仅保留 `stepBaseId` + `nodeName`（可选，默认取基础数据名称），不再传 `code/type` 等冗余字段。
 
 ### 2.5 设备挂载与汇总
 
