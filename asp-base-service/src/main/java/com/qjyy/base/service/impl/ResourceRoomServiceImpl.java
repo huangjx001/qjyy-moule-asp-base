@@ -11,6 +11,7 @@ import com.qjyy.base.domain.bo.ResourceRoomSaveBo;
 import com.qjyy.base.domain.entity.DeviceMount;
 import com.qjyy.base.domain.entity.ProcessNode;
 import com.qjyy.base.domain.entity.ProcessRouteVersion;
+import com.qjyy.base.domain.entity.ResourceBase;
 import com.qjyy.base.domain.entity.ResourceRoom;
 import com.qjyy.base.domain.entity.StepEdge;
 import com.qjyy.base.domain.entity.StepNode;
@@ -19,6 +20,7 @@ import com.qjyy.base.domain.vo.ResourceRoomVO;
 import com.qjyy.base.mapper.DeviceMountMapper;
 import com.qjyy.base.mapper.ProcessNodeMapper;
 import com.qjyy.base.mapper.ProcessRouteVersionMapper;
+import com.qjyy.base.mapper.ResourceBaseMapper;
 import com.qjyy.base.mapper.ResourceRoomMapper;
 import com.qjyy.base.mapper.StepEdgeMapper;
 import com.qjyy.base.mapper.StepNodeMapper;
@@ -38,6 +40,7 @@ public class ResourceRoomServiceImpl implements ResourceRoomService {
 	private final StepEdgeMapper stepEdgeMapper;
 	private final DeviceMountMapper deviceMountMapper;
 	private final ProcessNodeMapper processNodeMapper;
+	private final ResourceBaseMapper resourceBaseMapper;
 	private final RouteConvert routeConvert;
 
 	@Override
@@ -51,6 +54,10 @@ public class ResourceRoomServiceImpl implements ResourceRoomService {
 		ProcessNode node = processNodeMapper.selectById(bo.getProcessNodeId());
 		if (node == null || !bo.getRouteVersionId().equals(node.getRouteVersionId())) {
 			log.warn("创建资源失败, 工序不存在或版本不一致, processNodeId={}", bo.getProcessNodeId());
+			return null;
+		}
+		if (!applyResourceBase(bo)) {
+			log.warn("创建资源失败, 资源基础数据不存在, resourceBaseId={}", bo.getResourceBaseId());
 			return null;
 		}
 		ResourceRoom entity = routeConvert.toResourceRoom(bo);
@@ -75,6 +82,10 @@ public class ResourceRoomServiceImpl implements ResourceRoomService {
 		ProcessNode node = processNodeMapper.selectById(bo.getProcessNodeId());
 		if (node == null || !existing.getRouteVersionId().equals(node.getRouteVersionId())) {
 			log.warn("更新资源失败, 工序不存在或版本不一致, processNodeId={}", bo.getProcessNodeId());
+			return false;
+		}
+		if (!applyResourceBase(bo)) {
+			log.warn("更新资源失败, 资源基础数据不存在, resourceBaseId={}", bo.getResourceBaseId());
 			return false;
 		}
 		ResourceRoom entity = routeConvert.toResourceRoom(bo);
@@ -121,4 +132,19 @@ public class ResourceRoomServiceImpl implements ResourceRoomService {
 		return routeConvert.toResourceRoomVOList(resourceRoomMapper.selectList(wrapper));
 	}
 
+	private boolean applyResourceBase(ResourceRoomSaveBo bo) {
+		if (bo == null || bo.getResourceBaseId() == null) {
+			return true;
+		}
+		ResourceBase base = resourceBaseMapper.selectById(bo.getResourceBaseId());
+		if (base == null) {
+			return false;
+		}
+		bo.setResourceCode(base.getResourceCode());
+		bo.setResourceName(base.getResourceName());
+		if (bo.getSetupMinutes() == null) {
+			bo.setSetupMinutes(base.getDefaultSetupMinutes());
+		}
+		return true;
+	}
 }

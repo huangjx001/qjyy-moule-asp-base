@@ -13,6 +13,9 @@ public class ProcessNodeBo {
 	@ApiModelProperty(value = "节点ID")
 	private Long id;
 
+	@ApiModelProperty(value = "工序基础数据ID")
+	private Long processBaseId;
+
 	@ApiModelProperty(value = "工序编码")
 	private String nodeCode;
 

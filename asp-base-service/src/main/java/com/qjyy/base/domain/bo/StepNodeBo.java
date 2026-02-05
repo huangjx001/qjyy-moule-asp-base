@@ -13,6 +13,9 @@ public class StepNodeBo {
 	@ApiModelProperty(value = "工步ID")
 	private Long id;
 
+	@ApiModelProperty(value = "工步基础数据ID")
+	private Long stepBaseId;
+
 	@ApiModelProperty(value = "工步编码")
 	private String nodeCode;
 

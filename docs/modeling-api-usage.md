@@ -17,6 +17,27 @@
 
 > 工序/工步/资源基础数据由主数据模块统一维护，建模时通过 `*_base_id` 进行引用，并保留快照字段用于版本冻结。
 
+### 2.0 工序/工步/资源基础数据
+
+- `POST /process-bases`：创建工序基础数据。
+- `PUT /process-bases/{id}`：更新工序基础数据。
+- `DELETE /process-bases/{id}`：删除工序基础数据。
+- `GET /process-bases/{id}`：工序基础数据详情。
+- `GET /process-bases/list`：工序基础数据列表。
+- `GET /process-bases/options?keyword=...`：工序基础数据下拉。
+- `POST /resource-bases`：创建资源基础数据。
+- `PUT /resource-bases/{id}`：更新资源基础数据。
+- `DELETE /resource-bases/{id}`：删除资源基础数据。
+- `GET /resource-bases/{id}`：资源基础数据详情。
+- `GET /resource-bases/list`：资源基础数据列表。
+- `GET /resource-bases/options?keyword=...`：资源基础数据下拉。
+- `POST /step-bases`：创建工步基础数据。
+- `PUT /step-bases/{id}`：更新工步基础数据。
+- `DELETE /step-bases/{id}`：删除工步基础数据。
+- `GET /step-bases/{id}`：工步基础数据详情。
+- `GET /step-bases/list`：工步基础数据列表。
+- `GET /step-bases/options?keyword=...`：工步基础数据下拉。
+
 ### 2.1 路线与版本
 
 - `POST /routes`：创建路线。
@@ -49,6 +70,7 @@
 - `GET /graphs/step/{resourceRoomId}`：获取工步图（入口必须是资源）。
 - `POST /graphs/step/save`：保存工步图。
 - `POST /graphs/step/validate`：校验工步图。
+- `GET /graphs/step/nodes/{stepNodeId}/relations`：工步关联关系。
 
 ### 2.5 设备挂载与汇总
 

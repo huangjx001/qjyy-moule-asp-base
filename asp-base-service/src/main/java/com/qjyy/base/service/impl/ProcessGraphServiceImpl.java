@@ -1,6 +1,10 @@
 package com.qjyy.base.service.impl;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -12,6 +16,7 @@ import com.qjyy.base.domain.bo.ProcessEdgeBo;
 import com.qjyy.base.domain.bo.ProcessGraphSaveBo;
 import com.qjyy.base.domain.bo.ProcessNodeBo;
 import com.qjyy.base.domain.entity.ProcessEdge;
+import com.qjyy.base.domain.entity.ProcessBase;
 import com.qjyy.base.domain.entity.ProcessNode;
 import com.qjyy.base.domain.entity.ProcessRouteVersion;
 import com.qjyy.base.domain.enums.RouteVersionStatusEnum;
@@ -20,6 +25,7 @@ import com.qjyy.base.domain.vo.ProcessGraphVO;
 import com.qjyy.base.domain.vo.ProcessNodeSummaryVO;
 import com.qjyy.base.mapper.ProcessEdgeMapper;
 import com.qjyy.base.mapper.ProcessGraphQueryMapper;
+import com.qjyy.base.mapper.ProcessBaseMapper;
 import com.qjyy.base.mapper.ProcessNodeMapper;
 import com.qjyy.base.mapper.ProcessRouteVersionMapper;
 import com.qjyy.base.service.GraphValidationService;
@@ -38,6 +44,7 @@ public class ProcessGraphServiceImpl implements ProcessGraphService {
 	private final ProcessRouteVersionMapper routeVersionMapper;
 	private final ProcessGraphQueryMapper graphQueryMapper;
 	private final GraphValidationService graphValidationService;
+	private final ProcessBaseMapper processBaseMapper;
 	private final RouteConvert routeConvert;
 
 	@Override
@@ -72,7 +79,13 @@ public class ProcessGraphServiceImpl implements ProcessGraphService {
 		nodeWrapper.eq(ProcessNode::getRouteVersionId, bo.getRouteVersionId());
 		processNodeMapper.delete(nodeWrapper);
 		if (!CollectionUtils.isEmpty(bo.getNodes())) {
+			Map<Long, ProcessBase> processBaseMap = buildProcessBaseMap(bo.getNodes());
+			if (!validateProcessBase(bo.getNodes(), processBaseMap)) {
+				log.warn("保存工序图失败, 工序基础数据不存在, routeVersionId={}", bo.getRouteVersionId());
+				return false;
+			}
 			for (ProcessNodeBo nodeBo : bo.getNodes()) {
+				applyProcessBase(nodeBo, processBaseMap);
 				ProcessNode node = routeConvert.toProcessNode(nodeBo);
 				node.setRouteVersionId(bo.getRouteVersionId());
 				processNodeMapper.insert(node);
@@ -112,5 +125,46 @@ public class ProcessGraphServiceImpl implements ProcessGraphService {
 		LambdaQueryWrapper<ProcessEdge> wrapper = new LambdaQueryWrapper<>();
 		wrapper.eq(ProcessEdge::getRouteVersionId, routeVersionId);
 		return processEdgeMapper.selectList(wrapper);
+	}
+
+	private Map<Long, ProcessBase> buildProcessBaseMap(List<ProcessNodeBo> nodes) {
+		List<Long> baseIds = nodes.stream()
+				.map(ProcessNodeBo::getProcessBaseId)
+				.filter(id -> id != null)
+				.distinct()
+				.collect(Collectors.toList());
+		if (CollectionUtils.isEmpty(baseIds)) {
+			return new HashMap<>();
+		}
+		List<ProcessBase> bases = processBaseMapper.selectBatchIds(baseIds);
+		return bases.stream().collect(Collectors.toMap(ProcessBase::getId, Function.identity()));
+	}
+
+	private void applyProcessBase(ProcessNodeBo nodeBo, Map<Long, ProcessBase> baseMap) {
+		if (nodeBo == null || nodeBo.getProcessBaseId() == null) {
+			return;
+		}
+		ProcessBase base = baseMap.get(nodeBo.getProcessBaseId());
+		if (base == null) {
+			return;
+		}
+		nodeBo.setNodeCode(base.getProcessCode());
+		nodeBo.setNodeName(base.getProcessName());
+		nodeBo.setNodeType(base.getProcessType());
+		if (nodeBo.getDurationMinutes() == null) {
+			nodeBo.setDurationMinutes(base.getDefaultDurationMinutes());
+		}
+		if (nodeBo.getCriticalFlag() == null) {
+			nodeBo.setCriticalFlag(base.getCriticalFlag());
+		}
+	}
+
+	private boolean validateProcessBase(List<ProcessNodeBo> nodes, Map<Long, ProcessBase> baseMap) {
+		for (ProcessNodeBo node : nodes) {
+			if (node.getProcessBaseId() != null && !baseMap.containsKey(node.getProcessBaseId())) {
+				return false;
+			}
+		}
+		return true;
 	}
 }

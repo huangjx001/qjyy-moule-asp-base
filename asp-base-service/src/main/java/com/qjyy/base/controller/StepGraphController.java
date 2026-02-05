@@ -1,5 +1,7 @@
 package com.qjyy.base.controller;
 
+import java.util.List;
+
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -9,6 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.qjyy.base.domain.bo.StepGraphSaveBo;
 import com.qjyy.base.domain.vo.GraphValidationResultVO;
+import com.qjyy.base.domain.vo.StepEdgeVO;
 import com.qjyy.base.domain.vo.StepGraphVO;
 import com.qjyy.base.service.StepGraphService;
 import com.qjyy.common.core.domain.R;
@@ -41,5 +44,11 @@ public class StepGraphController {
 	@PostMapping("/validate")
 	public R<GraphValidationResultVO> validate(@RequestBody StepGraphSaveBo bo) {
 		return R.ok(stepGraphService.validateGraph(bo));
+	}
+
+	@ApiOperation(value = "工步关联关系")
+	@GetMapping("/nodes/{stepNodeId}/relations")
+	public R<List<StepEdgeVO>> relations(@PathVariable("stepNodeId") Long stepNodeId) {
+		return R.ok(stepGraphService.listRelations(stepNodeId));
 	}
 }
