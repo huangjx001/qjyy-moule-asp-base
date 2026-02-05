@@ -3,6 +3,7 @@
 
 CREATE TABLE IF NOT EXISTS process_route (
     id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '主键ID',
+    product_id BIGINT DEFAULT NULL COMMENT '产品ID',
     route_code VARCHAR(64) NOT NULL COMMENT '路线编码',
     route_name VARCHAR(128) NOT NULL COMMENT '路线名称',
     product_code VARCHAR(64) DEFAULT NULL COMMENT '产品编码',
@@ -11,7 +12,8 @@ CREATE TABLE IF NOT EXISTS process_route (
     remark VARCHAR(255) DEFAULT NULL COMMENT '备注',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    UNIQUE KEY uk_process_route_code (route_code)
+    UNIQUE KEY uk_process_route_code (route_code),
+    KEY idx_process_route_product (product_id)
 ) COMMENT='工艺路线';
 
 CREATE TABLE IF NOT EXISTS process_route_version (
@@ -29,6 +31,19 @@ CREATE TABLE IF NOT EXISTS process_route_version (
     KEY idx_route_version_route (route_id),
     UNIQUE KEY uk_route_version_code (route_id, version_code)
 ) COMMENT='工艺路线版本';
+
+CREATE TABLE IF NOT EXISTS product_base (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '主键ID',
+    product_code VARCHAR(64) NOT NULL COMMENT '产品编码',
+    product_name VARCHAR(128) NOT NULL COMMENT '产品名称',
+    product_type VARCHAR(64) DEFAULT NULL COMMENT '产品类型',
+    dosage_form VARCHAR(64) DEFAULT NULL COMMENT '剂型',
+    enabled TINYINT NOT NULL DEFAULT 1 COMMENT '是否启用',
+    remark VARCHAR(255) DEFAULT NULL COMMENT '备注',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    UNIQUE KEY uk_product_base_code (product_code)
+) COMMENT='产品基础数据';
 
 CREATE TABLE IF NOT EXISTS process_base (
     id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '主键ID',

@@ -5,20 +5,11 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 @Data
-@ApiModel(description = "工艺路线")
-public class ProcessRouteVO {
+@ApiModel(description = "产品基础数据下拉选项")
+public class ProductBaseOptionVO {
 
-	@ApiModelProperty(value = "路线ID")
+	@ApiModelProperty(value = "主键ID")
 	private Long id;
-
-	@ApiModelProperty(value = "产品ID")
-	private Long productId;
-
-	@ApiModelProperty(value = "路线编码")
-	private String routeCode;
-
-	@ApiModelProperty(value = "路线名称")
-	private String routeName;
 
 	@ApiModelProperty(value = "产品编码")
 	private String productCode;
@@ -28,7 +19,4 @@ public class ProcessRouteVO {
 
 	@ApiModelProperty(value = "剂型")
 	private String dosageForm;
-
-	@ApiModelProperty(value = "备注")
-	private String remark;
 }

@@ -10,22 +10,13 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 @Data
-@ApiModel(description = "工艺路线")
-@TableName("process_route")
-public class ProcessRoute {
+@ApiModel(description = "产品基础数据")
+@TableName("product_base")
+public class ProductBase {
 
 	@TableId
 	@ApiModelProperty(value = "主键ID")
 	private Long id;
-
-	@ApiModelProperty(value = "产品ID")
-	private Long productId;
-
-	@ApiModelProperty(value = "路线编码")
-	private String routeCode;
-
-	@ApiModelProperty(value = "路线名称")
-	private String routeName;
 
 	@ApiModelProperty(value = "产品编码")
 	private String productCode;
@@ -33,8 +24,14 @@ public class ProcessRoute {
 	@ApiModelProperty(value = "产品名称")
 	private String productName;
 
+	@ApiModelProperty(value = "产品类型")
+	private String productType;
+
 	@ApiModelProperty(value = "剂型")
 	private String dosageForm;
+
+	@ApiModelProperty(value = "是否启用")
+	private Integer enabled;
 
 	@ApiModelProperty(value = "备注")
 	private String remark;

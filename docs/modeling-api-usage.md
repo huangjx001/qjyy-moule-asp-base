@@ -2,7 +2,7 @@
 
 ## 1. MVP 使用顺序（闭环跑通）
 
-0. **维护基础数据** → 工序/工步/资源主数据准备完毕（供建模引用）。
+0. **维护基础数据** → 产品/工序/工步/资源主数据准备完毕（供建模引用）。
 1. **创建路线** → `POST /routes`
 2. **创建版本** → `POST /route-versions`
 3. **维护工序图** → `POST /graphs/process/save`（也可先 `/validate`）
@@ -15,10 +15,16 @@
 
 ## 2. 接口说明与要点
 
-> 工序/工步/资源基础数据由主数据模块统一维护，建模时通过 `*_base_id` 进行引用，并仅保留名称快照字段用于版本冻结，降低冗余。
+> 产品/工序/工步/资源基础数据由主数据模块统一维护，建模时通过 `*_base_id` 进行引用，并仅保留名称快照字段用于版本冻结，降低冗余。
 
-### 2.0 工序/工步/资源基础数据
+### 2.0 产品/工序/工步/资源基础数据
 
+- `POST /product-bases`：创建产品基础数据。
+- `PUT /product-bases/{id}`：更新产品基础数据。
+- `DELETE /product-bases/{id}`：删除产品基础数据。
+- `GET /product-bases/{id}`：产品基础数据详情。
+- `GET /product-bases/list`：产品基础数据列表。
+- `GET /product-bases/options?keyword=...`：产品基础数据下拉（仅启用）。
 - `POST /process-bases`：创建工序基础数据。
 - `PUT /process-bases/{id}`：更新工序基础数据。
 - `DELETE /process-bases/{id}`：删除工序基础数据。
@@ -50,6 +56,7 @@
 - `GET /route-versions/list?routeId=...`：版本列表。
 - `POST /route-versions/{id}/copy`：复制版本（深拷贝工序/资源/工步/挂载）。
 - `POST /route-versions/{id}/release`：发布版本（强制校验）。
+- 说明：创建路线时使用 `productId` 绑定产品基础数据，并自动写入产品名称/剂型快照字段。
 
 ### 2.2 工序画布（一级画布）
 
